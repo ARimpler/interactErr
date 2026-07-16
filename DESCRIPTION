@@ -1,0 +1,20 @@
+Package: m.error
+Title: m_error
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Aljoscha",
+           family = "Rimpler",
+           role = c("aut", "cre"),
+           email = "aljoscharimpler@gmail.com")
+Description: Shiny app to help determine the effects of omitting product like interaction effects from the dta generating mechanism under measurement error.
+License: What license is it under?
+Imports: 
+    config,
+    golem,
+    shiny,
+    bslib,
+    ggplot2,
+    viridis
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.3
