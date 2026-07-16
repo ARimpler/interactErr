@@ -89,3 +89,13 @@ residual_measures<-function(beta, signal_matrix, XE, EXY,E_y,
   rse<-rmse<-sqrt(exp_residual)
   return(c(exp_residual, r2,rmse, rse))
 }
+
+
+# sample fit  -------------------------------------------------------------
+
+loglik <- function(ete, n, k){
+  -n/2 * log(2*pi) - n/2 * log(ete/n) - n/2
+}
+
+aic <- function(ete, n, k) -2*loglik(ete, n, k) + 2*k
+bic <- function(ete, n, k) -2*loglik(ete, n, k) + log(n)*k

@@ -32,7 +32,7 @@ mod_dgm_ui <- function(id) {
         ),
         div(
           h6("Variable Z"),
-          numericInput(ns("mean_z"), "Mean", value = 0),
+          numericInput(ns("mean_z"), "Mean", value = 3),
           numericInput(ns("var_z"), "Variance", value = 1, min = 0),
           numericInput(
             ns("rel_z"),
@@ -139,6 +139,7 @@ mod_dgm_server <- function(id){
         mean_z = input$mean_z,
         var_z = input$var_z,
         rel_z = input$rel_z,
+        cov_xz=input$cov_xz,
         b0 = input$b0,
         b1 = input$b1,
         b2 = input$b2,

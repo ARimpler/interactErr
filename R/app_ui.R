@@ -36,7 +36,7 @@ golem_add_external_resources <- function() {
   )
 
   tags$head(
-    favicon(),
+    favicon("loki_ico"),
     bundle_resources(
       path = app_sys("app/www"),
       app_title = "m.error"

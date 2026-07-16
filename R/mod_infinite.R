@@ -172,7 +172,7 @@ mod_infinite_server <- function(id,dgm){
     df <- res_results()
     ggplot(df, aes(x = rel_x, y = rel_z, fill = E_R2_d)) +
       geom_tile() +
-      scale_fill_gradient2(midpoint = 0, low = "blue", mid = "white", high = "red") +
+      scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
       theme_minimal() +
       labs(title = "Difference in R² (Misspecified - Full)",
            x = "Reliability X", y = "Reliability Z",
@@ -184,7 +184,7 @@ mod_infinite_server <- function(id,dgm){
     df <- res_results()
     ggplot(df, aes(x = rel_x, y = rel_z, fill = E_RSE_d)) +
       geom_tile() +
-      scale_fill_gradient2(midpoint = 0, low = "blue", mid = "white", high = "red") +
+      scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
       theme_minimal() +
       labs(title = "Difference in MSE (Misspecified - Full)",
            x = "Reliability X", y = "Reliability Z",
@@ -196,7 +196,7 @@ mod_infinite_server <- function(id,dgm){
     df <- res_results()
     ggplot(df, aes(x = rel_x, y = rel_z, fill = E_RMSE_d)) +
       geom_tile() +
-      scale_fill_gradient2(midpoint = 0, low = "blue", mid = "white", high = "red") +
+      scale_fill_gradient2(midpoint = 0, low = "#440154",mid = "white", high = "#addc30") +
       theme_minimal() +
       labs(title = "Difference in RMSE (Misspecified - Full)",
            x = "Reliability X", y = "Reliability Z",
