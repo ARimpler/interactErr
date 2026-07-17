@@ -1,0 +1,10 @@
+name: m_error
+title: Measurement Error Vs Interaction Omission
+username: arimpler
+account: arimpler
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 16028338
+bundleId: 12276798
+url: https://arimpler.shinyapps.io/m_error/
+version: 1

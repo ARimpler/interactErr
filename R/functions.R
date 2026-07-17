@@ -90,6 +90,10 @@ residual_measures<-function(beta, signal_matrix, XE, EXY,E_y,
   return(c(exp_residual, r2,rmse, rse))
 }
 
+tss_est<-function(beta, signal_matrix, E_y){
+  tss<-(t(beta)%*%(signal_matrix-signal_matrix[,1]%*%
+                     t(signal_matrix[,1]))%*%beta+E_y)
+}
 
 # sample fit  -------------------------------------------------------------
 

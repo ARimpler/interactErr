@@ -44,13 +44,12 @@ rsconnect::writeManifest()
 
 ## In command line.
 rsconnect::deployApp(
-  appName = desc::desc_get_field("Package"),
-  appTitle = desc::desc_get_field("Package"),
+  appName = "m_error",
+  appTitle ="Measurement Error Vs Interaction Omission",
   appFiles = c(
     # Add any additional files unique to your app here.
     "R/",
     "inst/",
-    "data/",
     "NAMESPACE",
     "DESCRIPTION",
     "app.R"
