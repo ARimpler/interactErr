@@ -11,4 +11,5 @@ app_server <- function(input, output, session) {
   infinite<-mod_infinite_server("infinite_1", dgm)
   mod_finite_server("finite_1", dgm, infinite$df_estimates)
   mod_uncertainty_server("uncertainty_1", dgm)
+  mod_dgm_vis_server("dgm_vis_1", dgm$beta)
 }

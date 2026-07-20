@@ -14,6 +14,7 @@ app_ui <- function(request) {
       theme = bs_theme(version = 5, bootswatch = "flatly"),
         nav_panel("Home",fluidRow(card(HTML(intro)))),
         nav_panel("Data Generating Model", mod_dgm_ui("dgm_1")),
+        nav_panel("Visualization", mod_dgm_vis_ui("dgm_vis_1")),
         nav_panel("Population Level", mod_infinite_ui("infinite_1")),
         nav_panel("Sample Level", mod_finite_ui("finite_1")),
         nav_panel("Uncertainty", mod_uncertainty_ui("uncertainty_1"))

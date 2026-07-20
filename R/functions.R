@@ -103,3 +103,20 @@ loglik <- function(ete, n, k){
 
 aic <- function(ete, n, k) -2*loglik(ete, n, k) + 2*k
 bic <- function(ete, n, k) -2*loglik(ete, n, k) + log(n)*k
+
+
+
+# regression surface ------------------------------------------------------
+plane_surface <- function(beta, x_seq, z_seq){
+  outer(z_seq, x_seq,
+        FUN = function(z, x){beta[1] + beta[2]*x + beta[3]*z})
+}
+
+curved_surface <- function(beta, x_seq, z_seq){
+  outer(z_seq, x_seq,
+        FUN = function(z, x){beta[1] + beta[2]*x + beta[3]*z + beta[4]*x*z})
+}
+
+f_tangent<-function(beta, x, z){
+        beta[1]+beta[2]*x+beta[3]*z+beta[4]*x*z
+}
