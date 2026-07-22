@@ -21,19 +21,19 @@ mod_finite_ui <- function(id) {
       accordion(open = FALSE, accordion_panel(
         "Instructions", HTML(INS_descriptives)
       )),
+      card_header("Inputs"),
       layout_columns(
-        col_widths = c(12),
+        col_widths = c(3,3,3),
         div(
-          h6("Inputs"),
-          numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date())),
-          numericInput(ns("iter"), "Iterations", value = 5000),
+          numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
+        div(numericInput(ns("iter"), "Iterations", value = 5000)),
           #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
-          input_task_button(ns("run"), "Run Simulation")
+        div(input_task_button(ns("run"), "Run Simulation")
           #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
         )
       ),
+      card_header("Simulation Results"),
       card(
-        title="Simulation Results",
         layout_columns(
           col_widths = c(6,6),
           div(

@@ -11,8 +11,8 @@
 mod_dgm_ui <- function(id) {
   ns <- NS(id)
   tagList(fluidRow(
+    card_header("Descriptive Statistics"),
     card(
-      title = "Descriptive Statistics",
       accordion(open = FALSE, accordion_panel(
         "Instructions", HTML(INS_descriptives)
       )),
@@ -70,9 +70,8 @@ mod_dgm_ui <- function(id) {
         ),
         "R² without measurement error, assuming correct model specification"
       )
-    )#,
-#    textOutput(ns("testOUT"))
-  )))
+    )
+)))
 }
 
 #' dgm Server Functions
@@ -92,17 +91,14 @@ mod_dgm_server <- function(id){
     })
 
     v_ey <- reactive({
-      # center-consistent explained (signal) variance:
-      S_matrix <- QXs() - QXs()[,1] %*% t(QXs()[,1])
-      signal_var_y <- as.numeric(t(beta()) %*% S_matrix %*% beta())
-
-      # clamp R2 to avoid division-by-zero / extremes
-      R2 <- max(min(input$R2_true, 0.999999), 1e-12)
-
-      # noise variance implied by R2: E_y = S * (1 - R2) / R2
-      noise_y <- signal_var_y * (1 - R2) / R2
-
-      noise_y
+        # center-consistent explained (signal) variance:
+        S_matrix <- QXs() - QXs()[,1] %*% t(QXs()[,1])
+        signal_var_y <- as.numeric(t(beta()) %*% S_matrix %*% beta())
+        # clamp R2 to avoid division-by-zero / extremes
+        R2 <- max(min(input$R2_true, 0.999999), 1e-12)
+        # noise variance implied by R2: E_y = S * (1 - R2) / R2
+        noise_y <- signal_var_y * (1 - R2) / R2
+        noise_y
     })
 
     beta<-reactive({

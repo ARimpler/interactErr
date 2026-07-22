@@ -11,46 +11,58 @@ mod_uncertainty_ui <- function(id) {
   ns <- NS(id)
   tagList(fluidRow(
     card(
-      title = "Simulation Settings",
+      h3("Simulation Settings"),
       accordion(open = FALSE, accordion_panel(
         "Instructions", HTML(INS_descriptives)
       )),
+      # card_header("Empirical Estimates"),
+      # layout_columns(
+      #   col_widths = c(2,2,2,2,2,2),
+      #   div(numericInput(ns("b0_se"), "SE β₀", value = 0)),
+      #   div(numericInput(ns("b1_se"), "SE β₁", value = 0)),
+      #   div(numericInput(ns("b2_se"), "SE β₂", value = 0)),
+      #   div(numericInput(ns("b3_se"), "SE β₃", value = 0)),
+      #   div(numericInput(ns("R2_emp"), "Empirical R^2", value = 0, max=1)),
+      #   div(numericInput(ns("var_y_emp"), "Empirical variance  y", value = 0))
+      #   ),
+      card_header("Data Bounds"),
       layout_columns(
-        col_widths = c(8,4),
+        col_widths=c(2,2,2,2),
+          div(numericInput(ns("lower_x"), "Lower Bound x", value = -8)),
+          div(numericInput(ns("upper_x"), "Upper Bound x", value = 8)),
+          div(numericInput(ns("lower_z"), "Lower Bound z", value = -8)),
+          div(numericInput(ns("upper_z"), "Upper Bound z", value = 8))
+      ),
+      card_header("Samplesize and Parameters"),
+      layout_columns(
+        col_widths=c(2,3),
         div(
-          h6("Standard Error of Empirical Estimates"),
-          numericInput(ns("b0_se"), "SE β₀", value = 0),
-          numericInput(ns("b1_se"), "SE β₁", value = 0),
-          numericInput(ns("b2_se"), "SE β₂", value = 0),
-          numericInput(ns("b3_se"), "SE β₃", value = 0),
-          numericInput(ns("R2_emp"), "Empirical R^2 β₃", value = 0, max=1),
-          numericInput(ns("var_y_emp"), "Empirical variance  y", value = 0),
-          numericInput(ns("lower_x"), "Lower Bound x", value = 1),
-          numericInput(ns("upper_x"), "Upper Bound x", value = 2),
-          numericInput(ns("lower_z"), "Lower Bound z", value = 1),
-          numericInput(ns("upper_z"), "Upper Bound z", value = 2)
-        ),
-        div(
-          h6("Samplesize and Parameters"),
-          numericInput(ns("n_emp"), "Original Samplesize", value=25, min = 5),
-          numericInput(ns("p_emp"), "Original number of estimates", value=3, min=3)
+          numericInput(ns("n_emp"), "Original Samplesize", value=25, min = 5)),
+        div(numericInput(ns("p_emp"), "Original number of estimates", value=3, min=3)
         )
-      )),
+      )
+      ),
+    h3("Results"),
       card(
-        title="Results",
         layout_columns(
           col_widths = c(12),
           div(
-            h6("Confidence Intervals"),
+            card_header("Confidence Intervals"),
             #tableOutput(ns("CItable")),
             tableOutput(ns("sigma"))
             #tableOutput(ns("plausible_combinations"))
           )
           ),
-          div(
-            h6("Sign Flips"),
-            textOutput(ns("flip_text"))
-          ),
+        div(
+          card_header("Sign Flips"),
+          tableOutput(ns("flip_table_by_n"))
+        ),
+        layout_columns(col_widths=c(6,6),
+                       div(plotOutput(ns("flip_x_by_n"))),
+                       div(plotOutput(ns("flip_z_by_n")))
+                       ),
+        card_header("Custom Sign Flips"),
+        div(textOutput(ns("flip_text"))),
           layout_columns(col_widths=c(6,6),
           div(
             plotOutput(ns("flip_hist_x")),
@@ -60,64 +72,86 @@ mod_uncertainty_ui <- function(id) {
             plotOutput(ns("jn_plot_z")))
         )
       )
-  ))
+  )
+  )
 }
 
 #' uncertainty Server Functions
 #'
 #' @noRd
-mod_uncertainty_server <- function(id, dgm){
+mod_uncertainty_server <- function(id, dgm, infinite){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 beta<-reactive({dgm$beta()})
 QXX<-reactive({dgm$QXs()})
-#tss<-reactive({infinite$tss})
- t_crit<-reactive({
-   df <- input$n_emp - input$p_emp -1
-   percentile<-0.975
-   qt(percentile, df)
- })
+sigma<-reactive({infinite$rse()})
 
- CI<-reactive({
-  out<-rbind(
- c(beta()[1]-t_crit()*input$b0_se, beta()[1]+t_crit()*input$b0_se),
- c(beta()[2]-t_crit()*input$b1_se, beta()[2]+t_crit()*input$b1_se),
- c(beta()[3]-t_crit()*input$b2_se, beta()[3]+t_crit()*input$b2_se),
- c(beta()[4]-t_crit()*input$b3_se, beta()[4]+t_crit()*input$b3_se))
-  rownames(out) <- c("β₀", "β₁", "β₂", "β₃")
-  colnames(out) <- c("Lower", "Upper")
-  out
 
-  })
+# generic draws -----------------------------------------------------------
 
- output$CItable<-renderTable({CI()})
+gener_draws <- reactive({
+  ns <- c(100, 250, 500, 1000, 2000)
+  do.call(rbind, lapply(ns, function(n) {
+    QXX_inv <- solve(QXX() * n)
+    Vcov    <- sigma() * QXX_inv
+    df      <- n - input$p_emp - 1
+    d <- mvtnorm::rmvt(n = 10000, delta = beta(), sigma = Vcov, df = df)
+    data.frame(n = n, x_critical = -d[,3]/d[,4], z_critical = -d[,2]/d[,4])
+  }))
+})
 
- sigma<-reactive({
+flip_summary_by_n <- reactive({
+  gener_draws() |>
+    dplyr::group_by(n) |>
+    dplyr::summarise(
+      x_prop = mean(input$lower_x <= x_critical & x_critical <= input$upper_x),
+      z_prop = mean(input$lower_z <= z_critical & z_critical <= input$upper_z),
+      .groups = "drop"
+    )
+})
 
-# sigma hat estimates -----------------------------------------------------
-   QXX_inv<-solve(QXX()*input$n_emp)
-   sigma2_R2 <- (1 - input$R2_emp) * ((input$n_emp - 1)*input$var_y_emp) /
-     (input$n_emp - input$p_emp - 1)
+output$flip_table_by_n <- renderTable({
+  s <- flip_summary_by_n()
 
-   d <- diag(QXX_inv)
-   se <- c(input$b0_se, input$b1_se, input$b2_se, input$b3_se)
-   sigma2 <- se^2 / d
+  # paste(
+  #   sprintf("n = %d: z flips in %.1f%% of draws; x flips in %.1f%% of draws.",
+  #           s$n, s$x_prop * 100, s$z_prop * 100),
+  #   collapse = "\n"
+  # )
+})
+observe({print(max(gener_draws()$x_critical))})
+output$flip_x_by_n <- renderPlot({
+  ggplot(gener_draws(), ggplot2::aes(x = x_critical)) +
+    geom_histogram(bins = 200,
+                   aes(fill = after_stat(x >= input$lower_x & x <= input$upper_x)),
+    ) +
+    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +
+    geom_vline(xintercept = c(input$lower_x, input$upper_x),
+                        color = "darkred", linetype = 2, linewidth = 0.8) +
+    ggh4x::facet_grid2(n~. , scales = "free", independent = "all") +
+    labs(x = "x value where slope of z flips sign",
+                  title = "Distribution of flip point across sample sizes")+
+    theme_minimal()
+})
 
-   out <- data.frame(
-     Parameter = c("β₀", "β₁", "β₂", "β₃", "R²-based"),
-     `SE`      = c(se,NA),
-     `sigma^2` = c(sigma2,sigma2_R2),
-     `sigma`   = c(sqrt(sigma2), sqrt(sigma2_R2))
-   )
-   out
- })
- output$sigma<-renderTable({sigma()})
+output$flip_z_by_n <- renderPlot({
+  ggplot(gener_draws(), ggplot2::aes(x = z_critical)) +
+    geom_histogram(bins = 200,
+                   aes(fill = after_stat(x >= input$lower_z & x <= input$upper_z)),
+    ) +
+    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +    geom_vline(xintercept = c(input$lower_z, input$upper_z),
+                        color = "darkred", linetype = 2, linewidth = 0.8) +
+    ggh4x::facet_grid2(n~. , scales = "free", independent = "all") +
+    labs(x = "z value where slope of x flips sign",
+                  title = "Distribution of flip point across sample sizes")+
+    theme_minimal()
+})
 
 # generate plausible draws ------------------------------------------------
 
  draws <- reactive({
    QXX_inv <- solve(QXX() * input$n_emp)
-   sigma2_hat <- mean(sigma()[,4])
+   sigma2_hat <- sigma()
    Vcov <- sigma2_hat * QXX_inv
    df <- input$n_emp - input$p_emp - 1
    mvtnorm::rmvt(n = 10000, delta = beta(), sigma = Vcov, df = df)
@@ -148,22 +182,54 @@ This is based on %s plausible combinations of regression weights, simulated from
 # histograms for sign flips -----------------------------------------------
 
 
+# output$flip_hist_x <- renderPlot({
+#   d <- draws()
+#   x_crit <- -d[,2]/d[,4]
+#   hist(x_crit, breaks = 200, main = "Distribution of flip point for z's effect (in x)",
+#        xlab = "x value where slope of z flips sign", col = "grey85", border = "white")
+#   abline(v = c(input$lower_x, input$upper_x), col = "darkred", lwd = 2, lty = 2)
+# })
+#
+# output$flip_hist_z <- renderPlot({
+#   d <- draws()
+#   z_crit <- -d[,3]/d[,4]
+#   hist(z_crit, breaks = 200, main = "Distribution of flip point for x's effect (in z)",
+#        xlab = "z value where slope of x flips sign", col = "grey85", border = "white")
+#   abline(v = c(input$lower_z, input$upper_z), col = "darkred", lwd = 2, lty = 2)
+# })
+
+
 output$flip_hist_x <- renderPlot({
-  d <- draws()
-  x_crit <- -d[,2]/d[,4]
-  hist(x_crit, breaks = 80, main = "Distribution of flip point for z's effect (in x)",
-       xlab = "x value where slope of z flips sign", col = "grey85", border = "white")
-  abline(v = c(input$lower_z, input$upper_z), col = "darkred", lwd = 2, lty = 2)
+  d <- data.frame(x_crit = -draws()[,3] / draws()[,4])
+
+  ggplot(d, aes(x = x_crit)) +
+    geom_histogram(
+      aes(fill = after_stat(x >= input$lower_x & x <= input$upper_x)),
+      bins = 200, color = "white"
+    ) +
+    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +
+    geom_vline(xintercept = c(input$lower_x, input$upper_x),
+               color = "darkred", linetype = 2, linewidth = 0.8) +
+    labs(x = "x value where slope of z flips sign",
+         title = "Distribution of flip point for z's effect (in x)") +
+    theme_minimal()
 })
 
 output$flip_hist_z <- renderPlot({
-  d <- draws()
-  z_crit <- -d[,2]/d[,4]
-  hist(z_crit, breaks = 80, main = "Distribution of flip point for x's effect (in z)",
-       xlab = "z value where slope of x flips sign", col = "grey85", border = "white")
-  abline(v = c(input$lower_z, input$upper_z), col = "darkred", lwd = 2, lty = 2)
-})
+  d <- data.frame(z_crit = -draws()[,2] / draws()[,4])
 
+  ggplot(d, aes(x = z_crit)) +
+    geom_histogram(
+      aes(fill = after_stat(x >= input$lower_z & x <= input$upper_z)),
+      bins = 200, color = "white"
+    ) +
+    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +
+    geom_vline(xintercept = c(input$lower_z, input$upper_z),
+               color = "darkred", linetype = 2, linewidth = 0.8) +
+    labs(x = "z value where slope of x flips sign",
+         title = "Distribution of flip point for x's effect (in z)") +
+    theme_minimal()
+})
 
 # johnson neyman ----------------------------------------------------------
 

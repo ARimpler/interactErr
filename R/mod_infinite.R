@@ -115,6 +115,8 @@ mod_infinite_server <- function(id,dgm){
   }, digits=3)
 # fit table ---------------------------------------------------------------
   tss<-reactive({ tss_est(beta=beta(),signal_matrix=QX_f(), E_y=v_ey())})
+  rse<-reactive({residual_measures(beta=beta(), signal_matrix = QX_f(),
+                                   XE=Qst_f(), EXY = Xy(), E_y=v_ey(), interaction = TRUE)[4]})
 
   output$model_fit <- renderTable({
     fit_no_error<-residual_measures(beta=beta(), signal_matrix = QX_f(), XE=QX_f(), EXY = Xy(), E_y=v_ey(), interaction = TRUE)
@@ -203,7 +205,7 @@ mod_infinite_server <- function(id,dgm){
            x = "Reliability X", y = "Reliability Z",
            fill = "Δ RMSE")
   })
- return(list(df_estimates=df_estimates, tss=tss))
+ return(list(df_estimates=df_estimates, rse=rse, tss=tss))
   })
 }
 
