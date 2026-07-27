@@ -48,7 +48,7 @@ mod_dgm_vis_ui <- function(id) {
 #' dgm_vis Server Functions
 #'
 #' @noRd
-mod_dgm_vis_server <- function(id, beta){
+mod_dgm_vis_server <- function(id, beta_f, beta_r){
   moduleServer(id, function(input, output, session){
 
     ns <- session$ns
@@ -60,14 +60,14 @@ mod_dgm_vis_server <- function(id, beta){
     })
 
     c_surface<-reactive({
-      curved_surface(beta=beta(), x_seq=x_seq(), z_seq=z_seq())
+      curved_surface(beta=beta_f(), x_seq=x_seq(), z_seq=z_seq())
       })
     p_surface<-reactive({
-      plane_surface(beta=beta(), x_seq=x_seq(), z_seq=z_seq())
+      plane_surface(beta=beta_r(), x_seq=x_seq(), z_seq=z_seq())
     })
 
   ev_point<-reactive({
-    b<-beta()
+    b<-beta_f()
     x<-input$eval_x
     z<-input$eval_z
     y<-b[1]+b[2]*x+b[3]*z+b[4]*x*z
@@ -76,14 +76,14 @@ mod_dgm_vis_server <- function(id, beta){
 
 tangent_x<-reactive({
   ev<-ev_point()
-  b<-beta()
+  b<-beta_f()
     x<-ev$x
     z<-ev$z
     dy_dz<-b[3]+b[4]*x
     ev$y+dy_dz*(z_seq()-ev$z)
   })
 tangent_z<-reactive({
-  b<-beta()
+  b<-beta_f()
   ev<-ev_point()
   x<-ev$x
   z<-ev$z
@@ -125,7 +125,7 @@ output$interaction_surface<-renderPlotly({
       })
 
 output$model_equation <- renderText({
-  b <- beta()
+  b <- beta_f()
   x_eval <- ev_point()$x
   z_eval <- ev_point()$z
   b0<-b[1]+b[2]*x_eval+b[3]*z_eval+b[4]*x_eval*z_eval

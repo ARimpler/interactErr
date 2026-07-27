@@ -10,30 +10,41 @@
 mod_uncertainty_ui <- function(id) {
   ns <- NS(id)
   tagList(fluidRow(
+    card_header("General Info"),
     card(
-      h3("Simulation Settings"),
-      accordion(open = FALSE, accordion_panel(
-        "Instructions", HTML(INS_descriptives)
+      accordion(open = FALSE,
+          accordion_panel("Instructions", HTML(INS_uncertainty)),
+          accordion_panel("Background Information", HTML(backinf_uncertainty)),
+          accordion_panel("Assumptions", HTML(assumptions_uncertainty))
       )),
-      # card_header("Empirical Estimates"),
-      # layout_columns(
-      #   col_widths = c(2,2,2,2,2,2),
-      #   div(numericInput(ns("b0_se"), "SE β₀", value = 0)),
-      #   div(numericInput(ns("b1_se"), "SE β₁", value = 0)),
-      #   div(numericInput(ns("b2_se"), "SE β₂", value = 0)),
-      #   div(numericInput(ns("b3_se"), "SE β₃", value = 0)),
-      #   div(numericInput(ns("R2_emp"), "Empirical R^2", value = 0, max=1)),
-      #   div(numericInput(ns("var_y_emp"), "Empirical variance  y", value = 0))
-      #   ),
-      card_header("Data Bounds"),
+    card_header("Data Bounds"),
+    card(
+      div(textOutput(ns("inf_flip_location"))),
+      div(HTML("After you have defined the bounds of your data click `Run' to compute the probability and location of sign flips within your specified
+               data range for finite samples.")),
+      div(input_task_button(ns("run"), "Run")),
       layout_columns(
         col_widths=c(2,2,2,2),
-          div(numericInput(ns("lower_x"), "Lower Bound x", value = -8)),
+          div(numericInput(ns("lower_x"), "Lower Bound x", value = 2)),
           div(numericInput(ns("upper_x"), "Upper Bound x", value = 8)),
-          div(numericInput(ns("lower_z"), "Lower Bound z", value = -8)),
-          div(numericInput(ns("upper_z"), "Upper Bound z", value = 8))
+          div(numericInput(ns("lower_z"), "Lower Bound z", value = 1)),
+          div(numericInput(ns("upper_z"), "Upper Bound z", value = 6))
+      )),
+    h3("Predefined Samplesizes"),
+    card_header("Sign Flips"),
+    card(
+      div(HTML(expl_flips)),
+      div(
+        uiOutput(ns("flip_table_by_n"))
       ),
-      card_header("Samplesize and Parameters"),
+      div(HTML(expl_flip_figs)),
+      layout_columns(col_widths=c(6,6),
+                     div(plotOutput(ns("flip_b1_by_n"))),
+                     div(plotOutput(ns("flip_b2_by_n")))
+      )),
+    h3("Individual Samplesize"),
+    card_header("Samplesize and Parameters"),
+    card(
       layout_columns(
         col_widths=c(2,3),
         div(
@@ -42,25 +53,7 @@ mod_uncertainty_ui <- function(id) {
         )
       )
       ),
-    h3("Results"),
       card(
-        layout_columns(
-          col_widths = c(12),
-          div(
-            card_header("Confidence Intervals"),
-            #tableOutput(ns("CItable")),
-            tableOutput(ns("sigma"))
-            #tableOutput(ns("plausible_combinations"))
-          )
-          ),
-        div(
-          card_header("Sign Flips"),
-          tableOutput(ns("flip_table_by_n"))
-        ),
-        layout_columns(col_widths=c(6,6),
-                       div(plotOutput(ns("flip_x_by_n"))),
-                       div(plotOutput(ns("flip_z_by_n")))
-                       ),
         card_header("Custom Sign Flips"),
         div(textOutput(ns("flip_text"))),
           layout_columns(col_widths=c(6,6),
@@ -82,14 +75,28 @@ mod_uncertainty_ui <- function(id) {
 mod_uncertainty_server <- function(id, dgm, infinite){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
-beta<-reactive({dgm$beta()})
-QXX<-reactive({dgm$QXs()})
+
+beta<-reactive({infinite$bstar_f()})
+observe({print(beta())})
+#beta<-reactive({dgm$beta()})
+QXX<-reactive({infinite$Qstar_f()})
 sigma<-reactive({infinite$rse()})
 
 
+
+# flip text infinite ------------------------------------------------------
+
+output$inf_flip_location<-renderText({
+  b1b3=-beta()[2]/beta()[4]
+  b2b3=-beta()[3]/beta()[4]
+  sprintf("For an infinite sample the sign change of b1 relatig to predictor x
+          is at z = %.2f, the sign change for b2 relating to predictor z is at x= %.2f.",
+          b1b3, b2b3)
+})
+
 # generic draws -----------------------------------------------------------
 
-gener_draws <- reactive({
+gener_draws <- eventReactive(input$run, {
   ns <- c(100, 250, 500, 1000, 2000)
   do.call(rbind, lapply(ns, function(n) {
     QXX_inv <- solve(QXX() * n)
@@ -110,42 +117,53 @@ flip_summary_by_n <- reactive({
     )
 })
 
-output$flip_table_by_n <- renderTable({
-  s <- flip_summary_by_n()
 
-  # paste(
-  #   sprintf("n = %d: z flips in %.1f%% of draws; x flips in %.1f%% of draws.",
-  #           s$n, s$x_prop * 100, s$z_prop * 100),
-  #   collapse = "\n"
-  # )
+# sign flips across sample sizes ------------------------------------------
+
+
+output$flip_table_by_n<-renderUI({
+  s<-flip_summary_by_n()
+  s$x_prop<-round(s$x_prop*100,2)
+  s$z_prop<-round(s$z_prop*100,2)
+
+  gt::gt(s) |>
+    gt::cols_label(x_prop="% Flips in x", z_prop ="% Flips in z")
 })
 observe({print(max(gener_draws()$x_critical))})
-output$flip_x_by_n <- renderPlot({
+
+output$flip_b1_by_n <- renderPlot({
+  ggplot(gener_draws(), ggplot2::aes(x = z_critical)) +
+    geom_histogram(bins = 200,
+                   aes(fill = after_stat(x >= input$lower_z & x <= input$upper_z)),
+    ) +
+    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +
+    geom_vline(xintercept = c(input$lower_z, input$upper_z),
+               color = "black", linetype = 1, linewidth = 0.8) +
+    geom_vline(xintercept = c(input$lower_z, input$upper_z),
+               color = "white", linetype = 2, linewidth = 0.6)+
+    ggh4x::facet_grid2(n~. , scales = "free", independent = "all") +
+    labs(x = "z value where slope of x flips sign",
+         title = "Distribution of flip point across sample sizes")+
+    theme_minimal()
+})
+
+output$flip_b2_by_n <- renderPlot({
   ggplot(gener_draws(), ggplot2::aes(x = x_critical)) +
     geom_histogram(bins = 200,
                    aes(fill = after_stat(x >= input$lower_x & x <= input$upper_x)),
     ) +
     scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +
     geom_vline(xintercept = c(input$lower_x, input$upper_x),
-                        color = "darkred", linetype = 2, linewidth = 0.8) +
+               color = "black", linetype = 1, linewidth = 0.8) +
+    geom_vline(xintercept = c(input$lower_x, input$upper_x),
+               color = "white", linetype = 2, linewidth = 0.6)+
     ggh4x::facet_grid2(n~. , scales = "free", independent = "all") +
     labs(x = "x value where slope of z flips sign",
                   title = "Distribution of flip point across sample sizes")+
     theme_minimal()
 })
 
-output$flip_z_by_n <- renderPlot({
-  ggplot(gener_draws(), ggplot2::aes(x = z_critical)) +
-    geom_histogram(bins = 200,
-                   aes(fill = after_stat(x >= input$lower_z & x <= input$upper_z)),
-    ) +
-    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +    geom_vline(xintercept = c(input$lower_z, input$upper_z),
-                        color = "darkred", linetype = 2, linewidth = 0.8) +
-    ggh4x::facet_grid2(n~. , scales = "free", independent = "all") +
-    labs(x = "z value where slope of x flips sign",
-                  title = "Distribution of flip point across sample sizes")+
-    theme_minimal()
-})
+
 
 # generate plausible draws ------------------------------------------------
 
@@ -180,23 +198,6 @@ This is based on %s plausible combinations of regression weights, simulated from
 
 
 # histograms for sign flips -----------------------------------------------
-
-
-# output$flip_hist_x <- renderPlot({
-#   d <- draws()
-#   x_crit <- -d[,2]/d[,4]
-#   hist(x_crit, breaks = 200, main = "Distribution of flip point for z's effect (in x)",
-#        xlab = "x value where slope of z flips sign", col = "grey85", border = "white")
-#   abline(v = c(input$lower_x, input$upper_x), col = "darkred", lwd = 2, lty = 2)
-# })
-#
-# output$flip_hist_z <- renderPlot({
-#   d <- draws()
-#   z_crit <- -d[,3]/d[,4]
-#   hist(z_crit, breaks = 200, main = "Distribution of flip point for x's effect (in z)",
-#        xlab = "z value where slope of x flips sign", col = "grey85", border = "white")
-#   abline(v = c(input$lower_z, input$upper_z), col = "darkred", lwd = 2, lty = 2)
-# })
 
 
 output$flip_hist_x <- renderPlot({
@@ -239,11 +240,23 @@ output$jn_plot_x <- renderPlot({
   slopes <- sapply(z_seq, function(z) d[,2] + d[,4]*z)   # b1 + b3*z draws
   band <- apply(slopes, 2, quantile, probs = c(.025, .5, .975))
 
-  plot(z_seq, band[2,], type = "l", lwd = 2,
-       ylim = range(band), xlab = "z", ylab = "Simple slope of x on y")
-  polygon(c(z_seq, rev(z_seq)), c(band[1,], rev(band[3,])),
-          col = adjustcolor("steelblue", .3), border = NA)
-  abline(h = 0, lty = 2, col = "red")
+  plot_df <- data.frame(
+    z     = z_seq,
+    lower = band[1, ],
+    mid   = band[2, ],
+    upper = band[3, ],
+    pos= band[2, ]>=0
+  )
+
+  ggplot(plot_df, aes(x = z, y = mid)) +
+    geom_ribbon(aes(ymin = lower, ymax = upper, fill = pos),
+                alpha = 0.3) +
+    geom_line(linewidth = 1) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"),
+                      guide = "none") +
+    labs(x = "z", y = "Simple slope of x on y") +
+    theme_minimal()
 })
 
 output$jn_plot_z <- renderPlot({
@@ -252,11 +265,24 @@ output$jn_plot_z <- renderPlot({
   slopes <- sapply(x_seq, function(x) d[,3] + d[,4]*x)   # b2 + b3*x draws
   band <- apply(slopes, 2, quantile, probs = c(.025, .5, .975))
 
-  plot(x_seq, band[2,], type = "l", lwd = 2,
-       ylim = range(band), xlab = "x", ylab = "Simple slope of z on y")
-  polygon(c(x_seq, rev(x_seq)), c(band[1,], rev(band[3,])),
-          col = adjustcolor("steelblue", .3), border = NA)
-  abline(h = 0, lty = 2, col = "red")
+  plot_df <- data.frame(
+    x     = x_seq,
+    lower = band[1, ],
+    mid   = band[2, ],
+    upper = band[3, ],
+    pos= band[2, ]>=0
+  )
+
+  ggplot(plot_df, aes(x = x, y = mid)) +
+    geom_ribbon(aes(ymin = lower, ymax = upper, fill = pos),
+                alpha = 0.3) +
+    geom_line(linewidth = 1) +
+    geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"),
+                      guide = "none") +
+    labs(x = "x", y = "Simple slope of  z on y") +
+    theme_minimal()
+
 })
 
  output$plausible_combinations<-renderTable({draws()})

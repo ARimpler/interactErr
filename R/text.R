@@ -295,3 +295,98 @@ Blue areas indicate that the expected RSE is smaller for the model including the
 and red indicates that the model excluding the interaction performs better.
 As before, even small absolute differences can appear visually pronounced, so 'blue' areas do not necessarily reflect substantial practical gains in prediction accuracy.
 </p>"
+
+
+INS_uncertainty<-"<p>
+In this tab you can get an estimate of how likely sign flips are in a
+specified data range. Here, sign flips refer to simple slopes for which
+the sign is opposite of the average effects that would be obtained by the
+main effects only model.<br>
+To obtain an estimate you have to input the data lower and upper bounds
+of your predictor variables. These can be obtaine din different ways.
+For example, if you use a 7-point Likert-scale consisting of 5 items you
+can calculate that the smallest possible value for this predictor is
+5 (5*1) and the largest value is 35 (5*7).
+Note that sign flips for predictor 1 depend on the range of predictor 2
+and vice versa.</p>"
+# backinf_uncertainty<-"
+# <p>
+# In the previous tabs we have provided the possibility to visualize the regression surface
+# resulting from an interaction effect. In general it is correct that interaction effects have a global saddlepoint, similar to a quadratic function but across the preditor variables, however that was if the data
+# was bound by negative infinity and infinity. With empirical data this is typically not the case and we can restrict the data range (see below). <br>
+# We have also provided the possibility to compute the coeffcients
+# for the model at the point x=0, z=0 (Tab: Population Level) and define different model evaluation points (Tab: Data Visualization),
+# which is relevant for procedures like mean-centering or when certain cut-off values in the data exist.
+# An important question that is not answered by this is whether in the data range that is empirically plausible estimates with flipped signs compared to the
+# average effect are possible. We focus on sign flipped estimates as we consider this to be the case where not modelling an interaction effect can have the most negative effects. <br>
+# In the following we provide the probability of sign flips for the estimated model based on the true effects that you have provided in the 'Tab: Data Generating Mechanism' for different sample sizes and the location of this sign flip.<br>
+# It is also possible to specify a specific sample size and get an estimate for this value.
+# </p>"
+
+
+backinf_uncertainty<-"
+<p>
+In the previous tabs, you were given the option to visualise the regression surface
+resulting from an interaction effect. Generally, interaction effects have a
+global saddle point that resembles a quadratic function across the
+predictor variables. However, this only applies when the data is bounded by
+negative and positive infinity. With empirical data, this is typically not
+the case, so we can restrict the data range (see below).
+An important question that arises from this is whether a saddle point
+occurs within the data range. We have also provided the option to compute
+the model's coefficients at x = 0 and z = 0 (see the 'Population Level'
+tab), as well as the option to define different model evaluation points
+(see the 'Data Visualisation' tab). This is relevant for procedures such
+as mean-centring or when the data contains certain cut-off values.<br>
+Nevertheless, this does not address the important question of whether it
+is possible to obtain estimates with flipped signs compared to the average
+effect within an empirically plausible data range. Our focus here is on
+sign-flipped estimates because not modelling an interaction effect is
+considered to have the most negative impact in this case. <br>
+Below, we present the probability of sign flips for the estimated model
+based on the true effects provided in the ''Data Generating Mechanism' tab.
+It is also possible to specify a particular sample size and obtain an estimate for it.
+</p>"
+
+assumptions_uncertainty<-"
+<p>
+For the computations on this page we make the following assumptions:
+<ul>
+<li> the effects in the Tab `Data Generating Mechanism' are the true effects </li>
+<li> the error in the predictor variables is classical measurement error</li>
+<li> the residuals are normally distributed and independent of the predictors</li>
+<li> the residuals are homoskedastic </li>
+</ul>
+</p>"
+
+expl_flips<-"
+<p>
+The table below shows the frequency of regression estimates for which the
+estimate has a different sign to the average effect within the specified
+data range.<br>
+This information is based on the full model resulting from the descriptive
+statistics and effects specified in the 'Data Generating Mechanism' tab.
+For example, if the average effect of predictor x (main effects only model)
+is positive, we calculate how often it is negative within the specified z
+range, and vice versa for predictor z. Similarly, if the average effect is
+negative, we calculate how often positive effects occur within the specified
+data range.<br>
+The numbers and figures below are based on 10,000 draws from a multivariate normal distribution for the expected regression weights.
+</p>
+"
+expl_flip_figs<-"
+<p>
+The figures below show the distributions of the values at which the sign of the regression weights flips.
+The vertical lines indicate the specified data bounds.
+If the bars are coloured dark blue, this indicates that these flip points are
+outside the data range; if they are coloured green, they are within the data range.
+</p>
+"
+
+
+vis_applied<-"
+<p>
+Similar, to the previos visualization we indicate the resulting regression plane for the reduced mdoel
+and the full model, based on noisy measurements.
+</p>
+"

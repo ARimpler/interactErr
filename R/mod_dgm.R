@@ -71,7 +71,10 @@ mod_dgm_ui <- function(id) {
         "R² without measurement error, assuming correct model specification"
       )
     )
-)))
+)),
+fluidRow(
+  mod_dgm_vis_ui("dgm_vis_1")
+))
 }
 
 #' dgm Server Functions
@@ -104,7 +107,30 @@ mod_dgm_server <- function(id){
     beta<-reactive({
       rbind(input$b0, input$b1, input$b2, input$b3)
     })
+
+# cauchy schwartz  --------------------------------------------------------
+
+    observe({
+      max_cov <- sqrt(input$var_x * input$var_z)
+
+      if (abs(input$cov_xz) > max_cov) {
+        showNotification(
+          paste0(
+            "Covariance must satisfy |Cov(X,Z)| ≤ ",
+            round(max_cov, 3)
+          ),
+          type = "error",
+          duration = NULL
+        )
+      } else {
+        removeNotification(id = "cov_error")
+      }
+    })
+
+
+
     QXs<-reactive({
+      req(abs(input$cov_xz) <= sqrt(input$var_x * input$var_z))
       QX(mean_x=input$mean_x, mean_z=input$mean_z,
        var_x = input$var_x, var_z = input$var_z, cov_xz = input$cov_xz)
     })
@@ -116,6 +142,14 @@ mod_dgm_server <- function(id){
          mean_z = input$mean_z)
     })
 
+
+# beta reduced ------------------------------------------------------------
+
+beta_r<-reactive({
+  b0<-beta()[1]+beta()[4]*(input$cov_xz/(input$var_x*input$var_z)-input$mean_x*input$mean_z)
+  b1<-beta()[2]+beta()[4]*input$mean_z
+  b2<-beta()[3]+beta()[4]*input$mean_x
+  c(b0,b1,b2) })
   # test --------------------------------------------------------------------
 
     output$testOUT<-renderPrint({
@@ -147,6 +181,7 @@ mod_dgm_server <- function(id){
       QXs=QXs,
       QDs=QDs,
       beta=beta,
+      beta_r=beta_r,
       Xy=Xy,
       v_ey=v_ey,
       v_ex=v_ex,

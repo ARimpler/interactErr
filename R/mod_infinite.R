@@ -26,6 +26,9 @@ mod_infinite_ui <- function(id) {
                    accordion_panel("Table Explanation", HTML(EXPL_weights_pop))
                  )
                )),
+           fluidRow(
+             div(HTML(vis_applied)),
+             mod_dgm_vis_ui("dgm_vis_2")),
              fluidRow(
                card(card_header("Expected Model Fit and Prediction Accuracy on Population Level"),
                     id="model_fit_pop",
@@ -205,7 +208,7 @@ mod_infinite_server <- function(id,dgm){
            x = "Reliability X", y = "Reliability Z",
            fill = "Δ RMSE")
   })
- return(list(df_estimates=df_estimates, rse=rse, tss=tss))
+ return(list(df_estimates=df_estimates,bstar_f=ME_model, bstar_r=ME_OVB_model ,Qstar_f=Qst_f, rse=rse, tss=tss))
   })
 }
 
