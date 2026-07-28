@@ -9,19 +9,28 @@ kind of data that one has.</p>
 <h3.How to use the app?</h3>
 <p>To use the app you have to do the following</p>
 <ul>
-<li>Go to the tab <strong>continuous-continuous</strong> if both of your predictor variables are continuous.</li>
-<li>Go to the tab <strong>continuous-categorical</strong> if one of your
-predictor variables is continuous, and the other is categorical.</li>
-<li>In the tab you first have to go to <strong>Data Generation</strong> where you
+<li>Go to the tab <strong>Theoretical Effects</strong> if your analysis will be based on theoretically derived effects.</li>
+<li>In the tab you first have to go to <strong>Data Generating Model</strong> where you
 find the subheading <strong>Descriptive Statistics</strong> and
 <strong>True Effects</strong>. Please specify the required statistics, such as <em>means,
 variance, and covariance between predictors</em>, specify <em>reliability parameters</em>,
 and the expected <em>true effects</em>.</li>
-<li>This input is used for the following computations.</li>
+<li>This input is used for the following computations:</li>
 <li>Effects on population level can be found following <strong>Population Level</strong>.</li>
 <li>Effects on sample level can be found following <strong>Sample Level</strong>.</li>
+<li>The probability of sign flipped regression estimates within a specified data range can be found in the tab <strong>Sign Flips</strong>. </li>
 </ul>
 <h3>Why should I use the app?</h3>
+<p>A common choice to model effects where analysts assume that an effect of a predictor on the outcome
+depends on a third variable is modeling product-like interactions. However, these interaction effects
+are prone to not replicate, in particular when measurement error in the predictors is present.
+However, not modeling these effects when they truly exist can yield severly biased regression weights.
+In this particular context this means that there are large deviations from the average effects. These deviations can be substantial
+so that the average effect may be positive, however for a subset of people this might be negative. <br>
+Given that much research is not about the average (e.g. psychopathology often times requires deviation from
+the average), an important question is whether <strong>simplyfing</strong> the model to <strong> increase replicability</strong>
+carries the risk of <strong>adverse effects for a subgroup</strong>. <br>
+On the other hand, </p>
 <p>The app shows you the comparison of two different linear regression models.
 In the computations throughout the app we assume that a true interaction effect,
 which can correctly be modelled as a product between predictor variables, exist.
@@ -146,6 +155,23 @@ also provide the expected bias in the second table on the left. This table is or
 the bias instead of expected regression weight. As you may have noticed,
 the values in the second table are based on those in the first, by subtracting the
 values in its first row (the true effect sizes) from the effect sizes in the other rows.</p>"
+
+
+backinf_infinite<-"
+<p>
+Spaceholder
+</p>"
+
+assumptions_infinite<-"
+<p>
+For the computations on this page we make the following assumptions:
+<ul>
+<li> the effects in the Tab `Data Generating Mechanism' are the true effects </li>
+<li> the error in the predictor variables is classical measurement error</li>
+<li> the unexplained variance in the `Data Gnerating Mechanism` tab is independent of the predictors</li>
+<li> at least one of the predictors is symmetricly distributed</li>
+</ul>
+</p>"
 EXPL_accuracy_pop<-"
 <p>Here, we can see different metrics related to the prediction accuracy in expectation.
 Specifically, we provide the  <strong>population R²</strong> for an infinite sample,
@@ -386,7 +412,7 @@ outside the data range; if they are coloured green, they are within the data ran
 
 vis_applied<-"
 <p>
-Similar, to the previos visualization we indicate the resulting regression plane for the reduced mdoel
+Similar, to the previous visualization we indicate the resulting regression plane for the reduced mdoel
 and the full model, based on noisy measurements.
 </p>
 "

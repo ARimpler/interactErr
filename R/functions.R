@@ -120,3 +120,20 @@ curved_surface <- function(beta, x_seq, z_seq){
 f_tangent<-function(beta, x, z){
         beta[1]+beta[2]*x+beta[3]*z+beta[4]*x*z
 }
+
+
+
+# skew --------------------------------------------------------------------
+
+rmvsn_safe <- function(n, mean, var1, var2, cov, gamma1) {
+  if (all(gamma1 == 0)) {
+    return(mvtnorm::rmvnorm(n, mean, matrix(c(var1, cov, cov, var2), 2, 2)))
+  }
+  cp <- list(mean = mean,
+             var.cov = matrix(c(var1, cov, cov, var2), 2, 2),
+             gamma1 = gamma1)
+  dp <- tryCatch(sn::cp2dp(cp, family = "SN"), error = function(e) NULL)
+  shiny::validate(shiny::need(!is.null(dp),
+                              "This skewness/correlation combination isn't feasible for the skew-normal — try smaller skewness values."))
+  sn::rmsn(n, dp = dp)
+}

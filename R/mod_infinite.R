@@ -13,17 +13,19 @@ mod_infinite_ui <- function(id) {
   tagList(
            mod_sticky_params_ui(ns("sticky_params")), # add the sticky summary card
              fluidRow(
+               h3("Effects on Population Level"),
                card(
-                 title="Effects on Population Level",
                  id="pop",
+                 accordion(
+                   open=FALSE,
+                   accordion_panel("Table Explanation", HTML(EXPL_weights_pop)),
+                   accordion_panel("Background Information", HTML(backinf_infinite)),
+                   accordion_panel("Assumptions", HTML(assumptions_infinite))
+                 ),
                  layout_columns(
                    col_widths = c(6, 6),
                    tableOutput(ns("coef_table")),
                    tableOutput(ns("bias_table"))
-                 ),
-                 accordion(
-                   open=FALSE,
-                   accordion_panel("Table Explanation", HTML(EXPL_weights_pop))
                  )
                )),
            fluidRow(

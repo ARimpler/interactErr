@@ -13,6 +13,7 @@
 #' @importFrom ggh4x facet_grid2
 #' @importFrom bslib  input_task_button
 #' @import ggplot2 viridis
+#' @importFrom sn cp2dp rmsn
 mod_finite_ui <- function(id) {
   ns <- NS(id)
   tagList(fluidRow(
@@ -28,6 +29,14 @@ mod_finite_ui <- function(id) {
           numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
         div(numericInput(ns("iter"), "Iterations", value = 5000)),
           #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
+        div(
+          checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
+          conditionalPanel(
+            condition = sprintf("input['%s']", ns("use_skew")),
+            numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
+            numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
+          )
+        ),
         div(input_task_button(ns("run"), "Run Simulation")
           #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
         )
@@ -82,13 +91,16 @@ sim_results <- eventReactive(input$run, {
       var_ex <-dgm$v_ex()
       var_ez <-dgm$v_ez()
       beta   <- dgm$beta()
+
+      skew_x <- if (isTRUE(input$use_skew)) input$skew_x else 0
+      skew_z <- if (isTRUE(input$use_skew)) input$skew_z else 0
       iter   <- input$iter
 
-      observe({
-        cat("mx:", mx, "mz:", mz, "var_x:", var_x, "var_z:", var_z,
-            "cov_xz:", cov_xz, "var_ey:", var_ey, "var_ex:", var_ex,
-            "var_ez:", var_ez, "beta:", beta, "\n")
-      })
+      # observe({
+      #   cat("mx:", mx, "mz:", mz, "var_x:", var_x, "var_z:", var_z,
+      #       "cov_xz:", cov_xz, "var_ey:", var_ey, "var_ex:", var_ex,
+      #       "var_ez:", var_ez, "beta:", beta, "\n")
+      # })
 
     results <- list()
     ns<-c(25,50,100, 200,500,1000)
@@ -96,10 +108,16 @@ sim_results <- eventReactive(input$run, {
       fit    <- matrix(NA, iter, 9)
       b_sim_r  <- matrix(NA, iter, length(r))
       b_sim_f  <- matrix(NA, iter, 4)
-    for(i in 1:iter){
-      tmp<-rmvnorm(n, c(mx,mz), matrix(c(var_x,cov_xz,cov_xz,var_z),2,2))
+      # x_bar    <- numeric(iter)
+      # z_bar    <- numeric(iter)
+      for(i in 1:iter){
+#      tmp<-rmvnorm(n, c(mx,mz), matrix(c(var_x,cov_xz,cov_xz,var_z),2,2))
+      tmp <- rmvsn_safe(n, c(mx, mz), var_x, var_z, cov_xz, c(skew_x, skew_z))
       x=tmp[,1]
       z=tmp[,2]
+      # x_bar[i] <- mean(x)
+      # z_bar[i] <- mean(z)
+
       ex<-rnorm(n, 0, sqrt(var_ex))
       ez<-rnorm(n, 0, sqrt(var_ez))
       Xf<-cbind(1,x,z,x*z)
@@ -138,6 +156,28 @@ sim_results <- eventReactive(input$run, {
     }
     list(results = results, beta = beta)
 })
+
+    # observe({
+    #   req(sim_results())
+    #   sr  <- sim_results()
+    #   tgt <- sr$target
+    #
+    #   cat("\n--- Mean sanity check ---\n")
+    #   cat(sprintf("Target: mx = %.3f | mz = %.3f | skew_x = %.2f | skew_z = %.2f\n",
+    #               tgt$mx, tgt$mz, tgt$skew_x, tgt$skew_z))
+    #
+    #   for (nn in names(sr$results)) {
+    #     xb <- sr$results[[nn]]$x_bar
+    #     zb <- sr$results[[nn]]$z_bar
+    #     cat(sprintf(
+    #       "n = %-5s | E[x_bar] = %7.3f (target %.3f) | E[z_bar] = %7.3f (target %.3f) | sd(x_bar) = %.3f (theory %.3f)\n",
+    #       nn, mean(xb), tgt$mx, mean(zb), tgt$mz, sd(xb), sqrt(tgt$var_x / as.integer(nn))
+    #     ))
+    #   }
+    # })
+
+
+
     df_sim <- reactive({
       sr      <- sim_results()
       results <- sr$results
