@@ -21,7 +21,7 @@ mod_dgm_ui <- function(id) {
         div(
           h6("Variable X"),
           numericInput(ns("mean_x"), "Mean", value = 5),
-          numericInput(ns("var_x"), "Variance", value = 1, min = 3),
+          numericInput(ns("var_x"), "Variance", value = 1, min = 0),
           numericInput(
             ns("rel_x"),
             "Reliability",
@@ -86,14 +86,17 @@ mod_dgm_server <- function(id){
 
 # reliability to error variance -------------------------------------------
     v_ex<-reactive({
+      inputs_ok()
       ((1-input$rel_x)/input$rel_x)*input$var_x # if var_x true variance (not observed)
     })
 
     v_ez<-reactive({
+      inputs_ok()
       ((1-input$rel_z)/input$rel_z)*input$var_z # if var_x true variance (not observed)
     })
 
     v_ey <- reactive({
+      inputs_ok()
         # center-consistent explained (signal) variance:
         S_matrix <- QXs() - QXs()[,1] %*% t(QXs()[,1])
         signal_var_y <- as.numeric(t(beta()) %*% S_matrix %*% beta())
@@ -105,12 +108,14 @@ mod_dgm_server <- function(id){
     })
 
     beta<-reactive({
+      inputs_ok()
       rbind(input$b0, input$b1, input$b2, input$b3)
     })
 
-# cauchy schwartz  --------------------------------------------------------
+# Error cauchy schwartz  --------------------------------------------------------
 
     observe({
+      inputs_ok()
       max_cov <- sqrt(input$var_x * input$var_z)
 
       if (abs(input$cov_xz) > max_cov) {
@@ -119,6 +124,7 @@ mod_dgm_server <- function(id){
             "Covariance must satisfy |Cov(X,Z)| ≤ ",
             round(max_cov, 3)
           ),
+          id="cov_error",
           type = "error",
           duration = NULL
         )
@@ -127,17 +133,71 @@ mod_dgm_server <- function(id){
       }
     })
 
+# Error reliability 0 -----------------------------------------------------
+    observe({
+      inputs_ok()
+
+      if (input$rel_x ==0|| input$rel_z ==0||input$rel_x>1||input$rel_z>1) {
+        showNotification(
+          paste0(
+            "The reliability hast to be larger 0 and smaller 1"
+          ),
+          id="rel_error",
+          type = "error",
+          duration = NULL
+        )
+      } else {
+        removeNotification(id = "rel_error")
+      }
+    })
+
+
+
+# Error var= 0 ------------------------------------------------------------
+
+    observe({
+      inputs_ok()
+      if (input$var_x ==0|| input$var_z ==0) {
+        showNotification(
+          paste0(
+            "The predictor variance has to be larger 0."
+          ),
+          id="var_error",
+          type = "error",
+          duration = NULL
+        )
+      } else {
+        removeNotification(id = "var_error")
+      }
+    })
+
+
+# Error inputs NA ---------------------------------------------------------
+
+    inputs_ok <- reactive({
+      vals <- list(input$mean_x, input$var_x, input$rel_x,
+                   input$mean_z, input$var_z, input$rel_z,
+                   input$cov_xz, input$b0, input$b1, input$b2, input$b3, input$R2_true)
+      req(all(!vapply(vals, function(x) is.null(x) || is.na(x), logical(1))))
+      TRUE
+    })
+
 
 
     QXs<-reactive({
+      inputs_ok()
+      req(input$var_x > 0&&input$var_z>0)
       req(abs(input$cov_xz) <= sqrt(input$var_x * input$var_z))
       QX(mean_x=input$mean_x, mean_z=input$mean_z,
        var_x = input$var_x, var_z = input$var_z, cov_xz = input$cov_xz)
     })
+
     Xy<-reactive({E_Xy(beta=beta(), signal_matrix = QXs())})
-    observe({print(Xy())})
-    observe({print(Xy()[1:3])})
+    # observe({print(Xy())})
+    # observe({print(Xy()[1:3])})
     QDs<-reactive({
+      inputs_ok()
+      req(input$rel_x>0&&input$rel_z>0)
       QD(var_error_x = v_ex(),var_error_z = v_ez(), var_x = input$var_x , var_z = input$var_z, mean_x = input$mean_x,
          mean_z = input$mean_z)
     })
@@ -146,19 +206,20 @@ mod_dgm_server <- function(id){
 # beta reduced ------------------------------------------------------------
 
 beta_r<-reactive({
+  inputs_ok()
   b0<-beta()[1]+beta()[4]*(input$cov_xz/(input$var_x*input$var_z)-input$mean_x*input$mean_z)
   b1<-beta()[2]+beta()[4]*input$mean_z
   b2<-beta()[3]+beta()[4]*input$mean_x
   c(b0,b1,b2) })
   # test --------------------------------------------------------------------
 
-    output$testOUT<-renderPrint({
-      list(
-        betas=beta(),
-        QX=QXs(),
-        QD=QDs()
-      )
-    })
+    # output$testOUT<-renderPrint({
+    #   list(
+    #     betas=beta(),
+    #     QX=QXs(),
+    #     QD=QDs()
+    #   )
+    # })
 
     # return parameters for other modules -------------------------------------
     params <- reactive({

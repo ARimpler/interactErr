@@ -27,7 +27,7 @@ mod_finite_ui <- function(id) {
         col_widths = c(3,3,3),
         div(
           numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
-        div(numericInput(ns("iter"), "Iterations", value = 5000)),
+        div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
           #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
         div(
           checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
@@ -78,6 +78,11 @@ mod_finite_server <- function(id, dgm, df_estimates){
     r<-1:3
     p<-reactive({dgm$params()})
     ovb<-reactive({df_estimates()[3,]})
+
+    iterations<- reactive({
+      min(max(input$iter, 1), 5000)  # clamp silently to 5000
+    })
+
 # simulation loop ---------------------------------------------------------
 sim_results <- eventReactive(input$run, {
       set.seed(input$seed)
@@ -94,17 +99,21 @@ sim_results <- eventReactive(input$run, {
 
       skew_x <- if (isTRUE(input$use_skew)) input$skew_x else 0
       skew_z <- if (isTRUE(input$use_skew)) input$skew_z else 0
-      iter   <- input$iter
+      iter   <- iterations()
 
-      # observe({
-      #   cat("mx:", mx, "mz:", mz, "var_x:", var_x, "var_z:", var_z,
-      #       "cov_xz:", cov_xz, "var_ey:", var_ey, "var_ex:", var_ex,
-      #       "var_ez:", var_ez, "beta:", beta, "\n")
-      # })
 
     results <- list()
     ns<-c(25,50,100, 200,500,1000)
+    dp <- get_dp_safe(c(mx, mz), var_x, var_z, cov_xz, c(skew_x, skew_z))
     for(n in ns){
+      big_xz <- rmvsn_safe(n * iter, dp, c(mx, mz), var_x, var_z, cov_xz)
+      big_ex <- matrix(rnorm(n * iter, 0, sqrt(var_ex)), nrow = n, ncol = iter)
+      big_ez <- matrix(rnorm(n * iter, 0, sqrt(var_ez)), nrow = n, ncol = iter)
+      big_ey <- matrix(rnorm(n * iter, 0, sqrt(var_ey)), nrow = n, ncol = iter)
+
+      x_all <- matrix(big_xz[,1], nrow = n, ncol = iter)
+      z_all <- matrix(big_xz[,2], nrow = n, ncol = iter)
+
       fit    <- matrix(NA, iter, 9)
       b_sim_r  <- matrix(NA, iter, length(r))
       b_sim_f  <- matrix(NA, iter, 4)
@@ -112,16 +121,23 @@ sim_results <- eventReactive(input$run, {
       # z_bar    <- numeric(iter)
       for(i in 1:iter){
 #      tmp<-rmvnorm(n, c(mx,mz), matrix(c(var_x,cov_xz,cov_xz,var_z),2,2))
-      tmp <- rmvsn_safe(n, c(mx, mz), var_x, var_z, cov_xz, c(skew_x, skew_z))
-      x=tmp[,1]
-      z=tmp[,2]
+
+
+      # tmp <- rmvsn_safe(n, c(mx, mz), var_x, var_z, cov_xz, c(skew_x, skew_z))
+      # x=tmp[,1]
+      # z=tmp[,2]
       # x_bar[i] <- mean(x)
       # z_bar[i] <- mean(z)
 
-      ex<-rnorm(n, 0, sqrt(var_ex))
-      ez<-rnorm(n, 0, sqrt(var_ez))
+      # ex<-rnorm(n, 0, sqrt(var_ex))
+      # ez<-rnorm(n, 0, sqrt(var_ez))
+
+      x <- x_all[,i]; z <- z_all[,i]
+      ex <- big_ex[,i]; ez <- big_ez[,i]; ey <- big_ey[,i]
+
+
       Xf<-cbind(1,x,z,x*z)
-      ey<-rnorm(n, 0, sqrt(var_ey))
+      #ey<-rnorm(n, 0, sqrt(var_ey))
       y<-Xf%*%beta+ey
       Xf_st<-cbind(1,x+ex,z+ez,(x+ex)*(z+ez))
       QXX<-crossprod(Xf,Xf)
@@ -157,25 +173,25 @@ sim_results <- eventReactive(input$run, {
     list(results = results, beta = beta)
 })
 
-    # observe({
-    #   req(sim_results())
-    #   sr  <- sim_results()
-    #   tgt <- sr$target
-    #
-    #   cat("\n--- Mean sanity check ---\n")
-    #   cat(sprintf("Target: mx = %.3f | mz = %.3f | skew_x = %.2f | skew_z = %.2f\n",
-    #               tgt$mx, tgt$mz, tgt$skew_x, tgt$skew_z))
-    #
-    #   for (nn in names(sr$results)) {
-    #     xb <- sr$results[[nn]]$x_bar
-    #     zb <- sr$results[[nn]]$z_bar
-    #     cat(sprintf(
-    #       "n = %-5s | E[x_bar] = %7.3f (target %.3f) | E[z_bar] = %7.3f (target %.3f) | sd(x_bar) = %.3f (theory %.3f)\n",
-    #       nn, mean(xb), tgt$mx, mean(zb), tgt$mz, sd(xb), sqrt(tgt$var_x / as.integer(nn))
-    #     ))
-    #   }
-    # })
 
+# max iteration  error ----------------------------------------------------
+
+    observe({
+      req(input$iter)
+
+      if (input$iter< 0 ||input$iter>5000) {
+        showNotification(
+          paste0(
+            "Please choose 5000 iterations or fewer. The following results are based on 5000 iterations."
+          ),
+          id="iter_error",
+          type = "error",
+          duration = NULL
+        )
+      } else {
+        removeNotification(id = "iter_error")
+      }
+    })
 
 
     df_sim <- reactive({
@@ -249,7 +265,7 @@ sim_results <- eventReactive(input$run, {
     })
 
 # Regression Estimate Summary Table -------------------------------------------------------------------
-observe({head(df_sim()$df_b_long)})
+
     output$simulation_estimate_summ <- renderUI({
       df_long <- df_sim()$df_b_long
       df_long <- df_long[!is.na(df_long$estimate), ]
@@ -292,7 +308,6 @@ observe({head(df_sim()$df_b_long)})
 
 
 # Fit Difference Plot -----------------------------------------------------
-observe({print(head(df_sim()$df_fit_long))})
 
   output$plot_fit_diff <- renderPlot({
 

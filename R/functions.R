@@ -125,15 +125,33 @@ f_tangent<-function(beta, x, z){
 
 # skew --------------------------------------------------------------------
 
-rmvsn_safe <- function(n, mean, var1, var2, cov, gamma1) {
-  if (all(gamma1 == 0)) {
-    return(mvtnorm::rmvnorm(n, mean, matrix(c(var1, cov, cov, var2), 2, 2)))
-  }
+get_dp_safe <- function(mean, var1, var2, cov, gamma1) {
+  if (all(gamma1 == 0)) return(NULL)  # signal: use plain rmvnorm path
   cp <- list(mean = mean,
              var.cov = matrix(c(var1, cov, cov, var2), 2, 2),
              gamma1 = gamma1)
   dp <- tryCatch(sn::cp2dp(cp, family = "SN"), error = function(e) NULL)
   shiny::validate(shiny::need(!is.null(dp),
                               "This skewness/correlation combination isn't feasible for the skew-normal — try smaller skewness values."))
+  dp
+}
+
+rmvsn_safe <- function(n, dp, mean, var1, var2, cov) {
+  if (is.null(dp)) {
+    return(mvtnorm::rmvnorm(n, mean, matrix(c(var1, cov, cov, var2), 2, 2)))
+  }
   sn::rmsn(n, dp = dp)
 }
+
+# rmvsn_safe <- function(n, mean, var1, var2, cov, gamma1) {
+#   if (all(gamma1 == 0)) {
+#     return(mvtnorm::rmvnorm(n, mean, matrix(c(var1, cov, cov, var2), 2, 2)))
+#   }
+#   cp <- list(mean = mean,
+#              var.cov = matrix(c(var1, cov, cov, var2), 2, 2),
+#              gamma1 = gamma1)
+#   dp <- tryCatch(sn::cp2dp(cp, family = "SN"), error = function(e) NULL)
+#   shiny::validate(shiny::need(!is.null(dp),
+#                               "This skewness/correlation combination isn't feasible for the skew-normal — try smaller skewness values."))
+#   sn::rmsn(n, dp = dp)
+# }
