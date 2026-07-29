@@ -1,0 +1,52 @@
+---
+title: 'Report Summary'
+output: pdf_document
+params:
+  dgm_params: NA
+  coef_table: NA
+  bias_table: NA
+  fit_table: NA
+  flip_text: NA
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Specified True Parameters
+
+This report reflects a *specified* configuration of true effects and is intended as a study-planning summary, not an empirical result.
+
+```{r}
+p <- params$dgm_params
+knitr::kable(data.frame(
+  Parameter = c("Mean X", "Var X", "Reliability X",
+                "Mean Z", "Var Z", "Reliability Z",
+                "Cov(X,Z)", "b0", "b1", "b2", "b3", "True R2"),
+  Value = c(p$mean_x, p$var_x, p$rel_x,
+            p$mean_z, p$var_z, p$rel_z,
+            p$cov_xz, p$b0, p$b1, p$b2, p$b3, p$R2_true)
+))
+```
+
+## Population-Level Coefficients
+
+```{r}
+knitr::kable(params$coef_table, digits = 3)
+```
+
+## Bias Relative to True Model
+
+```{r}
+knitr::kable(params$bias_table, digits = 3)
+```
+
+## Model Fit Comparison
+
+```{r}
+knitr::kable(params$fit_table, digits = 3)
+```
+
+## Sign Flip Location (Infinite Sample)
+
+`r params$flip_text`

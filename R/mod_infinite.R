@@ -109,7 +109,7 @@ mod_infinite_server <- function(id,dgm){
   }, digits = 3)
 
 # bias table --------------------------------------------------------------
-  output$bias_table<-renderTable({
+  bias_T<-reactive({
     df<-data.frame(
       Model=c("Full, No Error", "Full, Error", "Misspecified, No Error", "Misspecified, Error"),
       B0=df_estimates()[,2]-df_estimates()[1,2],
@@ -117,13 +117,17 @@ mod_infinite_server <- function(id,dgm){
       B2=df_estimates()[,4]-df_estimates()[1,4],
       B3=df_estimates()[,5]-df_estimates()[1,5]
     )
+  })
+  output$bias_table<-renderTable({
+  bias_T()
   }, digits=3)
 # fit table ---------------------------------------------------------------
   tss<-reactive({ tss_est(beta=beta(),signal_matrix=QX_f(), E_y=v_ey())})
   rse<-reactive({residual_measures(beta=beta(), signal_matrix = QX_f(),
                                    XE=Qst_f(), EXY = Xy(), E_y=v_ey(), interaction = TRUE)[4]})
 
-  output$model_fit <- renderTable({
+
+ fit_T<- reactive({
     fit_no_error<-residual_measures(beta=beta(), signal_matrix = QX_f(), XE=QX_f(), EXY = Xy(), E_y=v_ey(), interaction = TRUE)
     fit_ME<-residual_measures(beta=beta(), signal_matrix = QX_f(), XE=Qst_f(), EXY = Xy(), E_y=v_ey(), interaction = TRUE)
     fit_ovb<-residual_measures(beta=beta(), signal_matrix = QX_f(), XE=QX_r(), EXY = Xy()[r], E_y=v_ey(), interaction=FALSE)
@@ -137,6 +141,9 @@ mod_infinite_server <- function(id,dgm){
       MSE = c(fit_no_error[1],  fit_ME[1],fit_ovb[1], fit_joint[1])
     )
     df
+  })
+  output$model_fit <- renderTable({
+    fit_T()
   }, digits = 3)
 
 
@@ -210,7 +217,8 @@ mod_infinite_server <- function(id,dgm){
            x = "Reliability X", y = "Reliability Z",
            fill = "Δ RMSE")
   })
- return(list(df_estimates=df_estimates,bstar_f=ME_model, bstar_r=ME_OVB_model ,Qstar_f=Qst_f, rse=rse, tss=tss))
+ return(list(df_estimates=df_estimates,bstar_f=ME_model, bstar_r=ME_OVB_model ,Qstar_f=Qst_f, rse=rse, tss=tss,
+             bias_table=bias_T, fit_table=fit_T))
   })
 }
 

@@ -234,7 +234,8 @@ beta_r<-reactive({
         b0 = input$b0,
         b1 = input$b1,
         b2 = input$b2,
-        b3 = input$b3
+        b3 = input$b3,
+        R2_true=input$R2_true
       )
     })
     return(list(

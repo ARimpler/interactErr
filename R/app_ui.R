@@ -18,7 +18,8 @@ app_ui <- function(request) {
         #nav_panel("Visualization", mod_dgm_vis_ui("dgm_vis_1")),
         nav_panel("Population Level", mod_infinite_ui("infinite_1")),
         nav_panel("Sample Level", mod_finite_ui("finite_1")),
-        nav_panel("Sign Flips", mod_uncertainty_ui("uncertainty_1"))
+        nav_panel("Sign Flips", mod_uncertainty_ui("uncertainty_1")),
+        nav_panel("Report", mod_report_ui("report_1"))
       ),
       nav_menu("Empirical Effects"),
       #nav_panel("Empirical Model",mod_dgm_emp_ui("dgm_emp_1"))
