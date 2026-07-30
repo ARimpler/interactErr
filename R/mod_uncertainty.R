@@ -9,16 +9,27 @@
 #' @importFrom shiny NS tagList
 mod_uncertainty_ui <- function(id) {
   ns <- NS(id)
+  layout_sidebar(
+    sidebar = sidebar(
+      title = "On this page",
+      position = "left",
+      width = 200,
+      tags$nav(
+        tags$a(class = "d-block mb-2", href = "#setting", "Settings"),
+        tags$a(class = "d-block mb-2", href = "#predef", "Sign Flips Across Samplesizes"),
+        tags$a(class = "d-block mb-2", href = "#custom_def", "Sign Flips Custom Samplesize")
+      )
+    ),
   tagList(fluidRow(
     card_header("General Info"),
     card(
       accordion(open = FALSE,
-          accordion_panel("Instructions", HTML(INS_uncertainty)),
-          accordion_panel("Background Information", HTML(backinf_uncertainty)),
-          accordion_panel("Assumptions", HTML(assumptions_uncertainty))
+          accordion_panel("Instructions", HTML(INS_sign_flips)),
+          accordion_panel("Background Information", HTML(BACKINF_sign_flips)),
+          accordion_panel("Assumptions", HTML(ASSUMPTIONS_sign_flips))
       )),
     card_header("Data Bounds"),
-    card(
+    card(id="settings",
       div(textOutput(ns("inf_flip_location"))),
       div(HTML("After you have defined the bounds of your data click `Run' to compute the probability and location of sign flips within your specified
                data range for finite samples.")),
@@ -33,11 +44,15 @@ mod_uncertainty_ui <- function(id) {
     h3("Predefined Samplesizes"),
     card_header("Sign Flips"),
     card(
-      div(HTML(expl_flips)),
+      id="predef",
+      accordion(open = FALSE,
+                accordion_panel("Instructions", HTML(INS_flips)),
+                accordion_panel("Background Information", HTML(BACKINF_flips))
+      ),
       div(
         uiOutput(ns("flip_table_by_n"))
       ),
-      div(HTML(expl_flip_figs)),
+      div(HTML(INS_flip_figs)),
       layout_columns(col_widths=c(6,6),
                      div(plotOutput(ns("flip_b1_by_n"))),
                      div(plotOutput(ns("flip_b2_by_n")))
@@ -45,6 +60,7 @@ mod_uncertainty_ui <- function(id) {
     h3("Individual Samplesize"),
     card_header("Samplesize and Parameters"),
     card(
+      id="custom_def",
       layout_columns(
         col_widths=c(2,3),
         div(
@@ -65,6 +81,7 @@ mod_uncertainty_ui <- function(id) {
             plotOutput(ns("jn_plot_z")))
         )
       )
+  )
   )
   )
 }

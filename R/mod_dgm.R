@@ -10,9 +10,21 @@
 #' @import bslib
 mod_dgm_ui <- function(id) {
   ns <- NS(id)
+  layout_sidebar(
+    sidebar = sidebar(
+      title = "On this page",
+      position = "left",
+      width = 200,
+      tags$nav(
+        tags$a(class = "d-block mb-2", href = "#desc_stats", "Descriptive Statistics"),
+        tags$a(class = "d-block mb-2", href = "#true_eff", "Effects"),
+        tags$a(class = "d-block mb-2", href = "#vis", "Visualization")
+      )
+    ),
   tagList(fluidRow(
+    h3("Specification of Data"),
     card_header("Descriptive Statistics"),
-    card(
+    card(id="desc_stats",
       accordion(open = FALSE, accordion_panel(
         "Instructions", HTML(INS_descriptives)
       )),
@@ -48,8 +60,9 @@ mod_dgm_ui <- function(id) {
         )
       )
     )
-  ), fluidRow(card(
-    title = "True Effects",
+  ), fluidRow(
+    card_header("True Effects"),
+    card(id="true_eff",
     accordion(open = FALSE, accordion_panel(
       "Instructions effects", HTML(INS_effects)
     )),
@@ -73,8 +86,11 @@ mod_dgm_ui <- function(id) {
     )
 )),
 fluidRow(
-  mod_dgm_vis_ui("dgm_vis_1")
+  h3("Visualization"),
+  card(id="vis",
+       mod_dgm_vis_ui("dgm_vis_1"))
 ))
+)
 }
 
 #' dgm Server Functions

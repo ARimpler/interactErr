@@ -16,13 +16,28 @@
 #' @importFrom sn cp2dp rmsn
 mod_finite_ui <- function(id) {
   ns <- NS(id)
+  layout_sidebar(
+    sidebar = sidebar(
+      title = "On this page",
+      position = "left",
+      width = 200,
+      tags$nav(
+        tags$a(class = "d-block mb-2", href = "#setting", "Settings"),
+        tags$a(class = "d-block mb-2", href = "#results_weight", "Results Regression Weights"),
+        tags$a(class = "d-block mb-2", href = "#results_fit", "Results Fit and Differentiatability")
+      )
+    ),
   tagList(fluidRow(
-    card(
-      title = "Simulation Settings",
-      accordion(open = FALSE, accordion_panel(
-        "Instructions", HTML(INS_descriptives)
-      )),
-      card_header("Inputs"),
+    h3("Simulation Settings"),
+    card_header("Settings"),
+    card(id="setting",
+         accordion(
+           open=FALSE,
+           accordion_panel("Table Explanation", HTML(INS_finite)),
+           accordion_panel("Background Information", HTML(BACKINF_finite)),
+           accordion_panel("Assumptions", HTML(ASSUMPTIONS_finite))
+         )
+      ),
       layout_columns(
         col_widths = c(3,3,3),
         div(
@@ -40,9 +55,17 @@ mod_finite_ui <- function(id) {
         div(input_task_button(ns("run"), "Run Simulation")
           #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
         )
-      ),
-      card_header("Simulation Results"),
-      card(
+      ))
+    ),
+  fluidRow(
+      h3("Simulation Regression Weights"),
+      card_header("Weights"),
+      card(id="results_weight",
+           accordion(
+             open=FALSE,
+             accordion_panel("Instructions", HTML(INS_est_precision_sample)),
+             accordion_panel("Background Information", HTML(BACKINF_est_precision_sample))
+           ),
         layout_columns(
           col_widths = c(6,6),
           div(
@@ -54,17 +77,24 @@ mod_finite_ui <- function(id) {
             uiOutput(ns("simulation_estimate_summ"))
           )
         )
-        ),
-      card(
-        title = "Fit Comparison",
-        layout_columns(
+        )),
+  fluidRow(
+      h3("Results Fit and Differentiatability"),
+      card_header("Fit"),
+      card(id="results_fit",
+           accordion(
+             open=FALSE,
+             accordion_panel("Instructions", HTML(INS_fit_sample)),
+             accordion_panel("Background Information", HTML(BACKINF_fit_sample))
+           ),
+           layout_columns(
           col_widths = c(6, 6),
           div(h6("Fit Differences"), plotOutput(ns("plot_fit_diff"), height = "500px")),
           div(h6("Fit Summary"), uiOutput(ns("fit_summ")))
         )
       )
     )
-  ))
+  )
 }
 
 #' finite Server Functions

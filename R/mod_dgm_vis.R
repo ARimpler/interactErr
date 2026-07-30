@@ -13,9 +13,11 @@ mod_dgm_vis_ui <- function(id) {
   tagList(fluidRow(
     card(
       title = "Range of Predictors",
-      accordion(open = FALSE, accordion_panel(
-        "Instructions", HTML(INS_descriptives)
-      )),
+      accordion(open = FALSE,
+        accordion_panel("Instructions", HTML(INS_3d_vis)),
+        accordion_panel("Background Information", HTML(BACKINF_3d_vis)),
+        accordion_panel("Assumptions", HTML(ASSUMPTIONS_3d_vis))
+      ),
       layout_columns(
         col_widths = c(4, 4, 4),
         div(

@@ -10,17 +10,28 @@
 #' @import ggplot2
 mod_infinite_ui <- function(id) {
   ns <- NS(id)
+  layout_sidebar(
+    sidebar = sidebar(
+      title = "On this page",
+      position = "left",
+      width = 200,
+      tags$nav(
+        tags$a(class = "d-block mb-2", href = "#reg_weights", "Regression Weights"),
+        tags$a(class = "d-block mb-2", href = "#vis_applied", "Visualization"),
+        tags$a(class = "d-block mb-2", href = "#model_fit_pop", "Fit and Prediction Error")
+      )
+    ),
   tagList(
            mod_sticky_params_ui(ns("sticky_params")), # add the sticky summary card
              fluidRow(
-               h3("Effects on Population Level"),
+               h3("Regression Weights and Bias"),
                card(
-                 id="pop",
+                 id="reg_weights",
                  accordion(
                    open=FALSE,
-                   accordion_panel("Table Explanation", HTML(EXPL_weights_pop)),
-                   accordion_panel("Background Information", HTML(backinf_infinite)),
-                   accordion_panel("Assumptions", HTML(assumptions_infinite))
+                   accordion_panel("Instructions", HTML(INS_infinite)),
+                   accordion_panel("Background Information", HTML(BACKINF_infinite)),
+                   accordion_panel("Assumptions", HTML(ASSUMPTIONS_infinite))
                  ),
                  layout_columns(
                    col_widths = c(6, 6),
@@ -29,25 +40,30 @@ mod_infinite_ui <- function(id) {
                  )
                )),
            fluidRow(
-             div(HTML(vis_applied)),
-             mod_dgm_vis_ui("dgm_vis_2")),
+             h3("Visualization based on Obserevd Predictors"),
+             card(id="vis_applied",
+                  div(HTML(vis_applied)),
+             mod_dgm_vis_ui("dgm_vis_2"))),
              fluidRow(
+               h3("Fit, Prediction Error, and their Differences"),
                card(card_header("Expected Model Fit and Prediction Accuracy on Population Level"),
                     id="model_fit_pop",
+                    accordion(
+                      open=FALSE,
+                      accordion_panel("Instructions", HTML(INS_accuracy_pop)),
+                      accordion_panel("Background Information", HTML(BACKINF_accuracy_pop)),
+                    ),
                     tableOutput(ns("model_fit")),
                     layout_columns(
                       widths=c(4,4,4),
                       plotOutput(ns("r2_diff_heatmap"), height = "500px"),
                       plotOutput(ns("mse_diff_heatmap"), height = "500px"),
                       plotOutput(ns("rmse_diff_heatmap"), height = "500px")
-                    ),
-                    accordion(
-                      open=FALSE,
-                      accordion_panel("Explanation of Heatmaps", HTML(EXPL_accuracy_pop))
                     )
                )
              )
 
+  )
   )
 }
 
