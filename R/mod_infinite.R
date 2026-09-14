@@ -39,11 +39,11 @@ mod_infinite_ui <- function(id) {
                    tableOutput(ns("bias_table"))
                  )
                )),
-           fluidRow(
-             h3("Visualization based on Obserevd Predictors"),
-             card(id="vis_applied",
-                  div(HTML(vis_applied)),
-             mod_dgm_vis_ui("dgm_vis_2"))),
+           # fluidRow(
+           #   h3("Visualization based on Obserevd Predictors"),
+           #   card(id="vis_applied",
+           #        div(HTML(vis_applied)),
+           #   mod_dgm_vis_ui("dgm_vis_2"))),
              fluidRow(
                h3("Fit, Prediction Error, and their Differences"),
                card(card_header("Expected Model Fit and Prediction Accuracy on Population Level"),
@@ -233,7 +233,8 @@ mod_infinite_server <- function(id,dgm){
            x = "Reliability X", y = "Reliability Z",
            fill = "Δ RMSE")
   })
- return(list(df_estimates=df_estimates,bstar_f=ME_model, bstar_r=ME_OVB_model ,Qstar_f=Qst_f, rse=rse, tss=tss,
+ return(list(df_estimates=df_estimates,bstar_f=ME_model, bstar_r=ME_OVB_model,
+             beta_f=T_model, beta_r=OVB_model , Qstar_f=Qst_f, rse=rse, tss=tss,
              bias_table=bias_T, fit_table=fit_T))
   })
 }
