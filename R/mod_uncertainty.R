@@ -60,9 +60,9 @@ mod_uncertainty_ui <- function(id) {
             div(      layout_columns(
               col_widths=c(12,12),
               div(
-                numericInput(ns("n_emp"), "Original Samplesize", value=25, min = 5)),
-              div(numericInput(ns("p_emp"), "Original number of estimates", value=3, min=3)
-              )
+                numericInput(ns("n_emp"), "Original Samplesize", value=25, min = 5))#,
+              #div(numericInput(ns("p_emp"), "Original number of estimates", value=3, min=3)
+              #)
             ))
             )
           ),
@@ -116,7 +116,8 @@ gener_draws <- eventReactive(input$run, {
   do.call(rbind, lapply(ns, function(n) {
     QXX_inv <- solve(QXX() * n)
     Vcov    <- sigma() * QXX_inv
-    df      <- n - input$p_emp - 1
+    #df      <- n - input$p_emp - 1
+    df      <- n - 3 - 1
     d <- mvtnorm::rmvt(n = 10000, delta = beta(), sigma = Vcov, df = df)
     data.frame(n = n, x_critical = -d[,3]/d[,4], z_critical = -d[,2]/d[,4])
   }))
@@ -186,7 +187,8 @@ output$flip_b2_by_n <- renderPlot({
    QXX_inv <- solve(QXX() * input$n_emp)
    sigma2_hat <- sigma()
    Vcov <- sigma2_hat * QXX_inv
-   df <- input$n_emp - input$p_emp - 1
+   #df <- input$n_emp - input$p_emp - 1
+   df <- input$n_emp - 3 - 1
    mvtnorm::rmvt(n = 10000, delta = beta(), sigma = Vcov, df = df)
  })
 
