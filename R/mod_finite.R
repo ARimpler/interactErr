@@ -17,7 +17,7 @@
 mod_finite_ui <- function(id) {
   ns <- NS(id)
   tagList(
-    fluidRow(
+    div(
     h3("Simulation Settings"),
     card_header("Settings"),
     card(id="setting",
@@ -28,6 +28,7 @@ mod_finite_ui <- function(id) {
            accordion_panel("Assumptions", HTML(ASSUMPTIONS_finite))
          )
       )
+    ),
       # layout_columns(
       #   col_widths = c(3,3,3),
       #   div(
@@ -45,16 +46,40 @@ mod_finite_ui <- function(id) {
       #   div(input_task_button(ns("run"), "Run Simulation")
       #     #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
       #   )
-      # )
-    ),
-  fluidRow(
+      # ),
+  div(
       h3("Simulation Regression Weights"),
       card_header("Weights"),
       card(id="results_weight",
            accordion(
              open=FALSE,
-             accordion_panel("Instructions", HTML(INS_est_precision_sample)),
-             accordion_panel("Background Information", HTML(BACKINF_est_precision_sample))
+             layout_columns(
+               col_widths = c(8,4),
+               div(
+               accordion_panel("Instructions", HTML(INS_est_precision_sample)),
+               accordion_panel("Background Information", HTML(BACKINF_est_precision_sample))
+               ),
+               div(
+                 layout_columns(
+                   col_widths = c(12,12,12),
+                   div(
+                     numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
+                   div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
+                   #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
+                   div(
+                     checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
+                     conditionalPanel(
+                       condition = sprintf("input['%s']", ns("use_skew")),
+                       numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
+                       numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
+                     )
+                   ),
+                   div(input_task_button(ns("run"), "Run Simulation")
+                       #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
+                   )
+                 )
+               )
+               )
            ),
         layout_columns(
           col_widths = c(5,5,2),
@@ -65,30 +90,10 @@ mod_finite_ui <- function(id) {
           div(
             h6("Summary Table"),
             uiOutput(ns("simulation_estimate_summ"))
-          ),
-          div(
-            layout_columns(
-              col_widths = c(12,12,12),
-              div(
-                numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
-              div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
-              #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
-              div(
-                checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
-                conditionalPanel(
-                  condition = sprintf("input['%s']", ns("use_skew")),
-                  numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
-                  numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
-                )
-              ),
-              div(input_task_button(ns("run"), "Run Simulation")
-                  #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
-              )
-            )
           )
         )
         )),
-  fluidRow(
+  div(
       h3("Results Fit and Differentiatability"),
       card_header("Fit"),
       card(id="results_fit",

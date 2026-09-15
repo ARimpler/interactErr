@@ -9,7 +9,8 @@
 #' @importFrom shiny NS tagList
 mod_uncertainty_ui <- function(id) {
   ns <- NS(id)
-  tagList(fluidRow(
+  tagList(
+    div(
     card_header("General Info"),
     card(
       accordion(open = FALSE,
@@ -17,50 +18,54 @@ mod_uncertainty_ui <- function(id) {
           accordion_panel("Background Information", HTML(BACKINF_sign_flips)),
           accordion_panel("Assumptions", HTML(ASSUMPTIONS_sign_flips))
       )),
-    card_header("Data Bounds"),
-    card(id="settings",
-      div(textOutput(ns("inf_flip_location"))),
-      div(HTML("After you have defined the bounds of your data click `Run' to compute the probability and location of sign flips within your specified
-               data range for finite samples.")),
-      div(input_task_button(ns("run"), "Run")),
-      layout_columns(
-        col_widths=c(2,2,2,2),
-          div(numericInput(ns("lower_x"), "Lower Bound x", value = 2)),
-          div(numericInput(ns("upper_x"), "Upper Bound x", value = 8)),
-          div(numericInput(ns("lower_z"), "Lower Bound z", value = 1)),
-          div(numericInput(ns("upper_z"), "Upper Bound z", value = 6))
-      )),
-    h3("Predefined Samplesizes"),
-    card_header("Sign Flips"),
+    h3("Sign Flips"),
+    card_header( "Predefined Samplesizes"),
     card(
       id="predef",
       accordion(open = FALSE,
-                accordion_panel("Instructions", HTML(INS_flips)),
-                accordion_panel("Background Information", HTML(BACKINF_flips))
-      ),
-      div(
-        uiOutput(ns("flip_table_by_n"))
+                layout_columns(
+                  col_widths = c(8,4),
+                  div(accordion_panel("Instructions", HTML(INS_flips)),
+                      accordion_panel("Background Information", HTML(BACKINF_flips))),
+                  div(
+                    card_header("Data Bounds"),
+                    card(id="settings",
+                         div(textOutput(ns("inf_flip_location"))),
+                         div(HTML("After you have defined the bounds of your data click `Run' to compute the probability and location of sign flips within your specified
+               data range for finite samples.")),
+                         div(input_task_button(ns("run"), "Run")),
+                         layout_columns(
+                           col_widths=c(2,2,2,2),
+                           div(numericInput(ns("lower_x"), "Lower Bound x", value = 2)),
+                           div(numericInput(ns("upper_x"), "Upper Bound x", value = 8)),
+                           div(numericInput(ns("lower_z"), "Lower Bound z", value = 1)),
+                           div(numericInput(ns("upper_z"), "Upper Bound z", value = 6))
+                         ))
+                  )
+                )
+
       ),
       div(HTML(INS_flip_figs)),
-      layout_columns(col_widths=c(6,6),
+      layout_columns(col_widths=c(4,4,4),
+                     div(uiOutput(ns("flip_table_by_n"))),
                      div(plotOutput(ns("flip_b1_by_n"))),
                      div(plotOutput(ns("flip_b2_by_n")))
       )),
-    h3("Individual Samplesize"),
-    card_header("Samplesize and Parameters"),
-    card(
-      id="custom_def",
-      layout_columns(
-        col_widths=c(2,3),
-        div(
-          numericInput(ns("n_emp"), "Original Samplesize", value=25, min = 5)),
-        div(numericInput(ns("p_emp"), "Original number of estimates", value=3, min=3)
-        )
-      )
-      ),
       card(
         card_header("Custom Sign Flips"),
-        div(textOutput(ns("flip_text"))),
+        div(
+          layout_columns(
+            col_widths=c(8,4),
+            div(textOutput(ns("flip_text"))),
+            div(      layout_columns(
+              col_widths=c(12,12),
+              div(
+                numericInput(ns("n_emp"), "Original Samplesize", value=25, min = 5)),
+              div(numericInput(ns("p_emp"), "Original number of estimates", value=3, min=3)
+              )
+            ))
+            )
+          ),
           layout_columns(col_widths=c(6,6),
           div(
             plotOutput(ns("flip_hist_x")),

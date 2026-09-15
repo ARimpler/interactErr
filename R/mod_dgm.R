@@ -102,12 +102,8 @@ mod_dgm_ui <- function(id) {
         accordion_panel(
           "Descriptive Statistics",
           accordion(
-            open = FALSE,
-            id = ns("acc_instr_desc"),
-            accordion_panel("Instructions", HTML(INS_descriptives))
-          ),
-          accordion(
-            open = c("Variable X", "Variable Z", "Covariance"),
+            open= c("Variable X", "Variable Z", "Covariance"),
+          accordion_panel("Instructions", HTML(INS_descriptives)),
             accordion_panel(
               title = "Variable X",
               layout_columns(
@@ -140,16 +136,13 @@ mod_dgm_ui <- function(id) {
               title = "Covariance",
               numericInput(ns("cov_xz"), "Cov(X, Z)", value = 0)
             )
-          )
+        )
         ),
 
         accordion_panel(
           "True Effects",
           accordion(
-            open = FALSE,
-            id = ns("acc_instr_effects"),
-            accordion_panel("Instructions effects", HTML(INS_effects))
-          ),
+            accordion_panel("Instructions effects", HTML(INS_effects)),
           accordion(
             open = c("Effects β", "True R²"),
             accordion_panel(
@@ -176,6 +169,7 @@ mod_dgm_ui <- function(id) {
               )
             )
           )
+        )
         )
       )
 }
