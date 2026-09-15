@@ -16,18 +16,8 @@
 #' @importFrom sn cp2dp rmsn
 mod_finite_ui <- function(id) {
   ns <- NS(id)
-  layout_sidebar(
-    sidebar = sidebar(
-      title = "On this page",
-      position = "left",
-      width = 200,
-      tags$nav(
-        tags$a(class = "d-block mb-2", href = "#setting", "Settings"),
-        tags$a(class = "d-block mb-2", href = "#results_weight", "Results Regression Weights"),
-        tags$a(class = "d-block mb-2", href = "#results_fit", "Results Fit and Differentiatability")
-      )
-    ),
-  tagList(fluidRow(
+  tagList(
+    fluidRow(
     h3("Simulation Settings"),
     card_header("Settings"),
     card(id="setting",
@@ -37,25 +27,25 @@ mod_finite_ui <- function(id) {
            accordion_panel("Background Information", HTML(BACKINF_finite)),
            accordion_panel("Assumptions", HTML(ASSUMPTIONS_finite))
          )
-      ),
-      layout_columns(
-        col_widths = c(3,3,3),
-        div(
-          numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
-        div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
-          #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
-        div(
-          checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
-          conditionalPanel(
-            condition = sprintf("input['%s']", ns("use_skew")),
-            numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
-            numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
-          )
-        ),
-        div(input_task_button(ns("run"), "Run Simulation")
-          #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
-        )
-      ))
+      )
+      # layout_columns(
+      #   col_widths = c(3,3,3),
+      #   div(
+      #     numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
+      #   div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
+      #     #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
+      #   div(
+      #     checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
+      #     conditionalPanel(
+      #       condition = sprintf("input['%s']", ns("use_skew")),
+      #       numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
+      #       numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
+      #     )
+      #   ),
+      #   div(input_task_button(ns("run"), "Run Simulation")
+      #     #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
+      #   )
+      # )
     ),
   fluidRow(
       h3("Simulation Regression Weights"),
@@ -67,7 +57,7 @@ mod_finite_ui <- function(id) {
              accordion_panel("Background Information", HTML(BACKINF_est_precision_sample))
            ),
         layout_columns(
-          col_widths = c(6,6),
+          col_widths = c(5,5,2),
           div(
             h6("Regression Estimates"),
             plotOutput(ns("plot_estimates"), height = "500px")
@@ -75,6 +65,26 @@ mod_finite_ui <- function(id) {
           div(
             h6("Summary Table"),
             uiOutput(ns("simulation_estimate_summ"))
+          ),
+          div(
+            layout_columns(
+              col_widths = c(12,12,12),
+              div(
+                numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
+              div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
+              #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
+              div(
+                checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
+                conditionalPanel(
+                  condition = sprintf("input['%s']", ns("use_skew")),
+                  numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
+                  numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
+                )
+              ),
+              div(input_task_button(ns("run"), "Run Simulation")
+                  #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
+              )
+            )
           )
         )
         )),
@@ -103,6 +113,10 @@ mod_finite_ui <- function(id) {
 mod_finite_server <- function(id, dgm, df_estimates){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+    observe({
+      req(input$active_tab == "Explore")
+    })
+
 # preparation -------------------------------------------------------------
 
     r<-1:3

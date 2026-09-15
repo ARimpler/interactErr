@@ -13,10 +13,13 @@ mod_sticky_params_ui <- function(id) {
   tagList(
     card(
       title = "Current Parameters",
+      fill = FALSE,
+      full_screen = FALSE,
       style = "position: sticky; top: 0px; z-index: 999;
-  background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;",
+  background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;
+      min-height: 80px; display: block;",
       layout_columns(
-        col_widths = c(3, 3, 3),
+        col_widths = c(4, 4, 4),
         div(
           h6("Variable X"),
           textOutput(ns("summary_x"))
@@ -26,7 +29,7 @@ mod_sticky_params_ui <- function(id) {
           textOutput(ns("summary_z"))
         ),
         div(
-          h6("True Effects"),
+          h6("True Regression Weights"),
           textOutput(ns("summary_effects"))
         )
       )

@@ -10,19 +10,8 @@
 #' @import ggplot2
 mod_infinite_ui <- function(id) {
   ns <- NS(id)
-  layout_sidebar(
-    sidebar = sidebar(
-      title = "On this page",
-      position = "left",
-      width = 200,
-      tags$nav(
-        tags$a(class = "d-block mb-2", href = "#reg_weights", "Regression Weights"),
-        tags$a(class = "d-block mb-2", href = "#vis_applied", "Visualization"),
-        tags$a(class = "d-block mb-2", href = "#model_fit_pop", "Fit and Prediction Error")
-      )
-    ),
   tagList(
-           mod_sticky_params_ui(ns("sticky_params")), # add the sticky summary card
+           #mod_sticky_params_ui(ns("sticky_params")), # add the sticky summary card
              fluidRow(
                h3("Regression Weights and Bias"),
                card(
@@ -34,9 +23,10 @@ mod_infinite_ui <- function(id) {
                    accordion_panel("Assumptions", HTML(ASSUMPTIONS_infinite))
                  ),
                  layout_columns(
-                   col_widths = c(6, 6),
-                   tableOutput(ns("coef_table")),
-                   tableOutput(ns("bias_table"))
+                   col_widths = c(12),
+                   # tableOutput(ns("coef_table")),
+                   # tableOutput(ns("bias_table")),
+                   tableOutput(ns("combined_table"))
                  )
                )),
            # fluidRow(
@@ -63,7 +53,6 @@ mod_infinite_ui <- function(id) {
                )
              )
 
-  )
   )
 }
 
@@ -112,7 +101,7 @@ mod_infinite_server <- function(id,dgm){
 
   df_estimates<-reactive({
     df <- data.frame(
-      Model = c("Full, No Error", "Full, Error", "Misspecified, No Error", "Misspecified, Error"),
+      Model = c("Full, No Error", "Full, Error", "Reduced, No Error", "Reduced, Error"),
       b0 = c(beta()[1], ME_model()[1], OVB_model()[1], ME_OVB_model()[1]),
       b1 = c(beta()[2], ME_model()[2], OVB_model()[2], ME_OVB_model()[2]),
       b2 = c(beta()[3], ME_model()[3], OVB_model()[3], ME_OVB_model()[3]),
@@ -127,7 +116,7 @@ mod_infinite_server <- function(id,dgm){
 # bias table --------------------------------------------------------------
   bias_T<-reactive({
     df<-data.frame(
-      Model=c("Full, No Error", "Full, Error", "Misspecified, No Error", "Misspecified, Error"),
+      Model=c("Full, No Error", "Full, Error", "Reduced, No Error", "Reduced, Error"),
       B0=df_estimates()[,2]-df_estimates()[1,2],
       B1=df_estimates()[,3]-df_estimates()[1,3],
       B2=df_estimates()[,4]-df_estimates()[1,4],
@@ -137,6 +126,39 @@ mod_infinite_server <- function(id,dgm){
   output$bias_table<-renderTable({
   bias_T()
   }, digits=3)
+
+
+
+  df_combined <- reactive({
+    est <- df_estimates()
+    bias <- bias_T()
+
+    # Function to format cell as "Estimate (Bias)"
+    format_cell <- function(est_val, bias_val) {
+      if (is.na(est_val)) return("-")
+
+      # Format bias with a plus sign if positive
+      bias_str <- if (bias_val > 0) sprintf("+%.3f", bias_val) else sprintf("%.3f", bias_val)
+
+      # If it's the benchmark model (bias is 0), just show the estimate
+      if (abs(bias_val) < 1e-5) return(sprintf("%.3f", est_val))
+
+      sprintf("%.3f (%s)", est_val, bias_str)
+    }
+
+    data.frame(
+      Model = est$Model,
+      `β₀ (B0)` = mapply(format_cell, est$b0, bias$B0),
+      `β₁ (B1)` = mapply(format_cell, est$b1, bias$B1),
+      `β₂ (B2)` = mapply(format_cell, est$b2, bias$B2),
+      `β₃ (B3)` = mapply(format_cell, est$b3, bias$B3),
+      check.names = FALSE
+    )
+  })
+
+  output$combined_table <- renderTable({
+    df_combined()
+  }, align = 'lcccc')
 # fit table ---------------------------------------------------------------
   tss<-reactive({ tss_est(beta=beta(),signal_matrix=QX_f(), E_y=v_ey())})
   rse<-reactive({residual_measures(beta=beta(), signal_matrix = QX_f(),
@@ -151,7 +173,7 @@ mod_infinite_server <- function(id,dgm){
 
 
     df <- data.frame(
-      Model = c("Full, No Error", "Full, Error","Misspecified, No Error" ,"Misspecified, Error"),
+      Model = c("Full, No Error", "Full, Error","Reduced, No Error" ,"Reduced, Error"),
       R2 = c(fit_no_error[2], fit_ME[2],fit_ovb[2], fit_joint[2]),
       RMSE = c(fit_no_error[3], fit_ME[3],fit_ovb[3], fit_joint[3]),
       MSE = c(fit_no_error[1],  fit_ME[1],fit_ovb[1], fit_joint[1])
@@ -205,7 +227,7 @@ mod_infinite_server <- function(id,dgm){
       geom_tile() +
       scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
       theme_minimal() +
-      labs(title = "Difference in R² (Misspecified - Full)",
+      labs(title = "Difference in R² (Reduced - Full)",
            x = "Reliability X", y = "Reliability Z",
            fill = "Δ R²")
   })
@@ -217,7 +239,7 @@ mod_infinite_server <- function(id,dgm){
       geom_tile() +
       scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
       theme_minimal() +
-      labs(title = "Difference in MSE (Misspecified - Full)",
+      labs(title = "Difference in MSE (Reduced - Full)",
            x = "Reliability X", y = "Reliability Z",
            fill = "Δ MSE")
   })
@@ -229,7 +251,7 @@ mod_infinite_server <- function(id,dgm){
       geom_tile() +
       scale_fill_gradient2(midpoint = 0, low = "#440154",mid = "white", high = "#addc30") +
       theme_minimal() +
-      labs(title = "Difference in RMSE (Misspecified - Full)",
+      labs(title = "Difference in RMSE (Reduced - Full)",
            x = "Reliability X", y = "Reliability Z",
            fill = "Δ RMSE")
   })

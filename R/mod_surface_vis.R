@@ -10,26 +10,7 @@
 mod_surface_vis_ui <- function(id) {
   ns <- NS(id)
   tagList(fluidRow(
-    card(
-      title = "Range of Predictors",
-      accordion(open = FALSE,
-                accordion_panel("Instructions", HTML(INS_3d_vis)),
-                accordion_panel("Background Information", HTML(BACKINF_3d_vis)),
-                accordion_panel("Assumptions", HTML(ASSUMPTIONS_3d_vis))
-      ),
-      layout_columns(
-        col_widths = c(4, 4, 4),
-        div(h6("Range of X"),
-            numericInput(ns("lower_x"), "Lower Bound X", value = -8),
-            numericInput(ns("upper_x"), "Upper Bound X", value = 8)),
-        div(h6("Range of Z"),
-            numericInput(ns("lower_z"), "Lower Bound Z", value = -8),
-            numericInput(ns("upper_z"), "Upper Bound Z", value = 8)),
-        div(h6("Evaluation Point"),
-            numericInput(ns("eval_x"), "X", value = 0),
-            numericInput(ns("eval_z"), "Z", value = 0))
-      )
-    ),
+    h3("Regression Surface Visualization"),
     div(
       checkboxInput(ns("show_finite_var"), "Show sampling uncertainty", value = FALSE),
       conditionalPanel(
@@ -40,13 +21,28 @@ mod_surface_vis_ui <- function(id) {
       )
     ),
     layout_columns(
-      col_widths = c(6, 6),
+      col_widths = c(5, 5,2),
       card(title = "Data-generating model (infinite sample)", height = "600px", full_screen = TRUE,
            plotlyOutput(ns("dgm_surface"), height = "100%"),
            textOutput(ns("model_equation_true"))),
-      card(title = "Applied model (finite sample)", height = "600px", full_screen = TRUE,
+      card(title = "Applied model (infinite sample)", height = "600px", full_screen = TRUE,
            plotlyOutput(ns("est_surface"), height = "100%"),
-           textOutput(ns("model_equation_applied")))
+           textOutput(ns("model_equation_applied"))),
+      card(title="Plot Controls",
+           height="600px",
+           layout_columns(
+             col_widths = c(12,12,12),
+             div(h6("Range of X"),
+                 numericInput(ns("lower_x"), "Lower Bound X", value = -8),
+                 numericInput(ns("upper_x"), "Upper Bound X", value = 8)),
+             div(h6("Range of Z"),
+                 numericInput(ns("lower_z"), "Lower Bound Z", value = -8),
+                 numericInput(ns("upper_z"), "Upper Bound Z", value = 8)),
+             div(h6("Evaluation Point"),
+                 numericInput(ns("eval_x"), "X", value = 0),
+                 numericInput(ns("eval_z"), "Z", value = 0))
+           )
+           )
     ),
     tags$script(HTML(sprintf("
 (function() {
@@ -90,7 +86,27 @@ mod_surface_vis_ui <- function(id) {
     }
   });
 })();
-", ns("dgm_surface"), ns("est_surface"))))
+", ns("dgm_surface"), ns("est_surface")))),
+    card(
+      title = "Range of Predictors",
+      accordion(open = FALSE,
+                accordion_panel("Instructions", HTML(INS_3d_vis)),
+                accordion_panel("Background Information", HTML(BACKINF_3d_vis)),
+                accordion_panel("Assumptions", HTML(ASSUMPTIONS_3d_vis))
+      )#,
+      # layout_columns(
+      #   col_widths = c(4, 4, 4),
+      #   div(h6("Range of X"),
+      #       numericInput(ns("lower_x"), "Lower Bound X", value = -8),
+      #       numericInput(ns("upper_x"), "Upper Bound X", value = 8)),
+      #   div(h6("Range of Z"),
+      #       numericInput(ns("lower_z"), "Lower Bound Z", value = -8),
+      #       numericInput(ns("upper_z"), "Upper Bound Z", value = 8)),
+      #   div(h6("Evaluation Point"),
+      #       numericInput(ns("eval_x"), "X", value = 0),
+      #       numericInput(ns("eval_z"), "Z", value = 0))
+      # )
+    )
   ))
 }
 

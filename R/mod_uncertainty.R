@@ -9,17 +9,6 @@
 #' @importFrom shiny NS tagList
 mod_uncertainty_ui <- function(id) {
   ns <- NS(id)
-  layout_sidebar(
-    sidebar = sidebar(
-      title = "On this page",
-      position = "left",
-      width = 200,
-      tags$nav(
-        tags$a(class = "d-block mb-2", href = "#setting", "Settings"),
-        tags$a(class = "d-block mb-2", href = "#predef", "Sign Flips Across Samplesizes"),
-        tags$a(class = "d-block mb-2", href = "#custom_def", "Sign Flips Custom Samplesize")
-      )
-    ),
   tagList(fluidRow(
     card_header("General Info"),
     card(
@@ -83,7 +72,6 @@ mod_uncertainty_ui <- function(id) {
       )
   )
   )
-  )
 }
 
 #' uncertainty Server Functions
@@ -92,6 +80,11 @@ mod_uncertainty_ui <- function(id) {
 mod_uncertainty_server <- function(id, dgm, infinite){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
+
+    observe({
+      req(input$active_tab == "Explore")
+    })
+
 
 beta<-reactive({infinite$bstar_f()})
 observe({print(beta())})

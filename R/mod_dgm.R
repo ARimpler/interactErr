@@ -8,90 +8,179 @@
 #'
 #' @importFrom shiny NS tagList
 #' @import bslib
+# mod_dgm_ui <- function(id) {
+#   ns <- NS(id)
+#   layout_sidebar(
+#     sidebar = sidebar(
+#       title = "On this page",
+#       position = "left",
+#       width = 200,
+#       tags$nav(
+#         tags$a(class = "d-block mb-2", href = "#desc_stats", "Descriptive Statistics"),
+#         tags$a(class = "d-block mb-2", href = "#true_eff", "Effects"),
+#         tags$a(class = "d-block mb-2", href = "#vis", "Visualization")
+#       )
+#     ),
+#   tagList(fluidRow(
+#     h3("Specification of Data"),
+#     card_header("Descriptive Statistics"),
+#     card(id="desc_stats",
+#       accordion(open = FALSE, accordion_panel(
+#         "Instructions", HTML(INS_descriptives)
+#       )),
+#       layout_columns(
+#         col_widths = c(4, 4, 4),
+#         div(
+#           h6("Variable X"),
+#           numericInput(ns("mean_x"), "Mean", value = 5),
+#           numericInput(ns("var_x"), "Variance", value = 1, min = 0),
+#           numericInput(
+#             ns("rel_x"),
+#             "Reliability",
+#             value = 0.8,
+#             min = 0,
+#             max = 1
+#           )
+#         ),
+#         div(
+#           h6("Variable Z"),
+#           numericInput(ns("mean_z"), "Mean", value = 3),
+#           numericInput(ns("var_z"), "Variance", value = 1, min = 0),
+#           numericInput(
+#             ns("rel_z"),
+#             "Reliability",
+#             value = 0.8,
+#             min = 0,
+#             max = 1
+#           )
+#         ),
+#         div(
+#           h6("Covariance"),
+#           numericInput(ns("cov_xz"), "Cov(X, Z)", value = 0)
+#         )
+#       )
+#     )
+#   ), fluidRow(
+#     card_header("True Effects"),
+#     card(id="true_eff",
+#     accordion(open = FALSE, accordion_panel(
+#       "Instructions effects", HTML(INS_effects)
+#     )),
+#     layout_columns(
+#       col_widths = c(2, 2, 2, 2, 4),
+#       numericInput(ns("b0"), "β₀ intercept", value = 0),
+#       numericInput(ns("b1"), "β₁ main X", value = 1),
+#       numericInput(ns("b2"), "β₂ main Z", value = 1),
+#       numericInput(ns("b3"), "β₃ interaction", value = -0.75),
+#       tooltip(
+#         numericInput(
+#           ns("R2_true"),
+#           "True R²",
+#           value = 0.8,
+#           min = 0,
+#           max = 1,
+#           step = 0.05
+#         ),
+#         "R² without measurement error, assuming correct model specification"
+#       )
+#     )
+# )),
+# fluidRow(
+#   h3("Visualization"),
+#   card(id="vis",
+#        mod_dgm_vis_ui("dgm_vis_1"))
+# ))
+# )
+# }
+
+
 mod_dgm_ui <- function(id) {
   ns <- NS(id)
-  layout_sidebar(
-    sidebar = sidebar(
-      title = "On this page",
-      position = "left",
-      width = 200,
-      tags$nav(
-        tags$a(class = "d-block mb-2", href = "#desc_stats", "Descriptive Statistics"),
-        tags$a(class = "d-block mb-2", href = "#true_eff", "Effects"),
-        tags$a(class = "d-block mb-2", href = "#vis", "Visualization")
-      )
-    ),
-  tagList(fluidRow(
-    h3("Specification of Data"),
-    card_header("Descriptive Statistics"),
-    card(id="desc_stats",
-      accordion(open = FALSE, accordion_panel(
-        "Instructions", HTML(INS_descriptives)
-      )),
-      layout_columns(
-        col_widths = c(4, 4, 4),
-        div(
-          h6("Variable X"),
-          numericInput(ns("mean_x"), "Mean", value = 5),
-          numericInput(ns("var_x"), "Variance", value = 1, min = 0),
-          numericInput(
-            ns("rel_x"),
-            "Reliability",
-            value = 0.8,
-            min = 0,
-            max = 1
+  accordion(
+        open = c("Descriptive Statistics", "True Effects"),
+
+        accordion_panel(
+          "Descriptive Statistics",
+          accordion(
+            open = FALSE,
+            id = ns("acc_instr_desc"),
+            accordion_panel("Instructions", HTML(INS_descriptives))
+          ),
+          accordion(
+            open = c("Variable X", "Variable Z", "Covariance"),
+            accordion_panel(
+              title = "Variable X",
+              layout_columns(
+                numericInput(ns("mean_x"), "Mean", value = 5),
+                numericInput(ns("var_x"), "Variance", value = 1, min = 0),
+                numericInput(
+                  ns("rel_x"),
+                  "Reliability",
+                  value = 0.8,
+                  min = 0,
+                  max = 1
+                )
+              )
+            ),
+            accordion_panel(
+              title = "Variable Z",
+              layout_columns(
+                numericInput(ns("mean_z"), "Mean", value = 3),
+                numericInput(ns("var_z"), "Variance", value = 1, min = 0),
+                numericInput(
+                  ns("rel_z"),
+                  "Reliability",
+                  value = 0.8,
+                  min = 0,
+                  max = 1
+                )
+              )
+            ),
+            accordion_panel(
+              title = "Covariance",
+              numericInput(ns("cov_xz"), "Cov(X, Z)", value = 0)
+            )
           )
         ),
-        div(
-          h6("Variable Z"),
-          numericInput(ns("mean_z"), "Mean", value = 3),
-          numericInput(ns("var_z"), "Variance", value = 1, min = 0),
-          numericInput(
-            ns("rel_z"),
-            "Reliability",
-            value = 0.8,
-            min = 0,
-            max = 1
+
+        accordion_panel(
+          "True Effects",
+          accordion(
+            open = FALSE,
+            id = ns("acc_instr_effects"),
+            accordion_panel("Instructions effects", HTML(INS_effects))
+          ),
+          accordion(
+            open = c("Effects β", "True R²"),
+            accordion_panel(
+              title = "Effects β",
+              layout_columns(
+                tooltip(numericInput(ns("b0"), "β₀", value = 0), "intercept"),
+                tooltip(numericInput(ns("b1"), "β₁", value = 1), "linear effect of X"),
+                tooltip(numericInput(ns("b2"), "β₂", value = 1),"linear effect of Z"),
+                tooltip(numericInput(ns("b3"), "β₃", value = -0.75), "interaction")
+              )
+            ),
+            accordion_panel(
+              title = "True R²",
+              tooltip(
+                numericInput(
+                  ns("R2_true"),
+                  "True R²",
+                  value = 0.8,
+                  min = 0,
+                  max = 1,
+                  step = 0.05
+                ),
+                "R² without measurement error, assuming correct model specification"
+              )
+            )
           )
-        ),
-        div(
-          h6("Covariance"),
-          numericInput(ns("cov_xz"), "Cov(X, Z)", value = 0)
         )
       )
-    )
-  ), fluidRow(
-    card_header("True Effects"),
-    card(id="true_eff",
-    accordion(open = FALSE, accordion_panel(
-      "Instructions effects", HTML(INS_effects)
-    )),
-    layout_columns(
-      col_widths = c(2, 2, 2, 2, 4),
-      numericInput(ns("b0"), "β₀ intercept", value = 0),
-      numericInput(ns("b1"), "β₁ main X", value = 1),
-      numericInput(ns("b2"), "β₂ main Z", value = 1),
-      numericInput(ns("b3"), "β₃ interaction", value = -0.75),
-      tooltip(
-        numericInput(
-          ns("R2_true"),
-          "True R²",
-          value = 0.8,
-          min = 0,
-          max = 1,
-          step = 0.05
-        ),
-        "R² without measurement error, assuming correct model specification"
-      )
-    )
-)),
-fluidRow(
-  h3("Visualization"),
-  card(id="vis",
-       mod_dgm_vis_ui("dgm_vis_1"))
-))
-)
 }
+
+
 
 #' dgm Server Functions
 #'
