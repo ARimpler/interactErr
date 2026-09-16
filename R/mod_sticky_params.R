@@ -29,17 +29,6 @@ mod_sticky_params_ui <- function(id) {
             style = "display: inline-block; width: 100%;"),
             HTML("β₀=intercept;<br> β₁=linear effect x;<br> β₂=linear effect z;<br> β₃=interaction effect"))
             )
-        # div(
-        #   h6("Variable X"),
-        #   textOutput(ns("summary_x"))
-        # ),
-        # div(
-        #   h6("Variable Z"),
-        #   textOutput(ns("summary_z"))
-        # ),
-        # div(
-        #   h6("True Regression Weights"),
-        #   textOutput(ns("summary_effects"))
         )
       )
     )
@@ -58,7 +47,6 @@ mod_sticky_params_server <- function(id, params){
     output$params_table <-  renderTable({
       p <- params()
 
-      # Build the data frame exactly as requested
       data.frame(
         Variable = c("x", "z"),
         Mean     = c(p$mean_x, p$mean_z),
@@ -83,17 +71,6 @@ mod_sticky_params_server <- function(id, params){
       )
     }, striped = TRUE, bordered = TRUE, align = "c")
 
-
-    output$summary_x <- renderText({
-      p<-params()
-      sprintf("Mean: %g, Var: %g, Rel: %g", p$mean_x, p$var_x, p$rel_x)  })
-    output$summary_z <- renderText({
-      p<-params()
-      sprintf("Mean: %g, Var: %g, Rel: %g", p$mean_z, p$var_z, p$rel_z)  })
-    output$summary_effects <- renderText({
-      p<-params()
-      sprintf("β₀: %g, β₁: %g, β₂: %g ,β₃: %g",  p$b0, p$b1, p$b2, p$b3)
-    })
   })
 }
 
