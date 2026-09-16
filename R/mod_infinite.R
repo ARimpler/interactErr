@@ -11,29 +11,24 @@
 mod_infinite_ui <- function(id) {
   ns <- NS(id)
   tagList(
-           #mod_sticky_params_ui(ns("sticky_params")), # add the sticky summary card
-             fluidRow(
-               h3("Regression Weights and Bias"),
-               card(
-                 id="reg_weights",
-                 accordion(
-                   open=FALSE,
-                   accordion_panel("Instructions", HTML(INS_infinite)),
-                   accordion_panel("Background Information", HTML(BACKINF_infinite)),
-                   accordion_panel("Assumptions", HTML(ASSUMPTIONS_infinite))
-                 ),
-                 layout_columns(
-                   col_widths = c(12),
-                   # tableOutput(ns("coef_table")),
-                   # tableOutput(ns("bias_table")),
-                   tableOutput(ns("combined_table"))
-                 )
-               )),
-           # fluidRow(
-           #   h3("Visualization based on Obserevd Predictors"),
-           #   card(id="vis_applied",
-           #        div(HTML(vis_applied)),
-           #   mod_dgm_vis_ui("dgm_vis_2"))),
+             # fluidRow(
+             #   h3("Regression Weights and Bias"),
+             #   card(
+             #     id="reg_weights",
+             #     accordion(
+             #       open=FALSE,
+             #       accordion_panel("Instructions", HTML(INS_infinite)),
+             #       accordion_panel("Background Information", HTML(BACKINF_infinite)),
+             #       accordion_panel("Assumptions", HTML(ASSUMPTIONS_infinite))
+             #     ),
+             #     layout_columns(
+             #       col_widths = c(12),
+             #       # tableOutput(ns("coef_table")),
+             #       # tableOutput(ns("bias_table")),
+             #       #tableOutput(ns("combined_table"))
+             #     )
+             #   )),
+
              fluidRow(
                h3("Fit, Prediction Error, and their Differences"),
                card(card_header("Expected Model Fit and Prediction Accuracy on Population Level"),
@@ -43,7 +38,7 @@ mod_infinite_ui <- function(id) {
                       accordion_panel("Instructions", HTML(INS_accuracy_pop)),
                       accordion_panel("Background Information", HTML(BACKINF_accuracy_pop)),
                     ),
-                    tableOutput(ns("model_fit")),
+                    #tableOutput(ns("model_fit")),
                     layout_columns(
                       widths=c(4,4,4),
                       plotOutput(ns("r2_diff_heatmap"), height = "500px"),
@@ -53,6 +48,35 @@ mod_infinite_ui <- function(id) {
                )
              )
 
+  )
+}
+
+#' @noRd
+mod_infinite_ui_fit_diff_plots <- function(id) {
+  ns <- NS(id)
+  tagList(
+    layout_columns(
+      widths=c(4,4,4),
+      plotOutput(ns("r2_diff_heatmap"), height = "500px"),
+      plotOutput(ns("rmse_diff_heatmap"), height = "500px"),
+      plotOutput(ns("mse_diff_heatmap"), height = "500px")
+    )
+  )
+}
+
+#' @noRd
+mod_infinite_ui_bias_weights_combined <- function(id) {
+  ns <- NS(id)
+  tagList(
+    tableOutput(ns("combined_table"))
+  )
+}
+
+#' @noRd
+mod_infinite_ui_fit_table <- function(id) {
+  ns <- NS(id)
+  tagList(
+    tableOutput(ns("model_fit"))
   )
 }
 
@@ -88,9 +112,7 @@ mod_infinite_server <- function(id,dgm){
   v_ey<-reactive({dgm$v_ey()})
 # Computation --------------------------------------------------------------
 
-  observe({
-    print(Xy()[r])
-  })
+
   T_model<-reactive({beta()})#qr.solve(QX_f(), Xy())
   OVB_model<-reactive({qr.solve(QX_r(), Xy()[r])})
   ME_model<-reactive({qr.solve(Qst_f(), Xy())})
@@ -109,9 +131,7 @@ mod_infinite_server <- function(id,dgm){
     )
     df
   })
-  output$coef_table <- renderTable({
-    df_estimates()
-  }, digits = 3)
+
 
 # bias table --------------------------------------------------------------
   bias_T<-reactive({
@@ -123,9 +143,7 @@ mod_infinite_server <- function(id,dgm){
       B3=df_estimates()[,5]-df_estimates()[1,5]
     )
   })
-  output$bias_table<-renderTable({
-  bias_T()
-  }, digits=3)
+
 
 
 
@@ -156,9 +174,7 @@ mod_infinite_server <- function(id,dgm){
     )
   })
 
-  output$combined_table <- renderTable({
-    df_combined()
-  }, align = 'lcccc')
+
 # fit table ---------------------------------------------------------------
   tss<-reactive({ tss_est(beta=beta(),signal_matrix=QX_f(), E_y=v_ey())})
   rse<-reactive({residual_measures(beta=beta(), signal_matrix = QX_f(),
@@ -180,9 +196,7 @@ mod_infinite_server <- function(id,dgm){
     )
     df
   })
-  output$model_fit <- renderTable({
-    fit_T()
-  }, digits = 3)
+
 
 
 # fit heat maps -----------------------------------------------------------
@@ -220,6 +234,28 @@ mod_infinite_server <- function(id,dgm){
   })
 
 
+
+
+# # output ------------------------------------------------------------------
+#
+#   output$coef_table <- renderTable({
+#     df_estimates()
+#   }, digits = 3)
+#
+#   output$bias_table<-renderTable({
+#     bias_T()
+#   }, digits=3)
+#
+  output$combined_table <- renderTable({
+    df_combined()
+  }, align = 'lcccc', bordered=TRUE)
+#
+  output$model_fit <- renderTable({
+    fit_T()
+  }, digits = 3)
+#
+#
+#
   output$r2_diff_heatmap <- renderPlot({
 
     df <- res_results()
@@ -227,9 +263,9 @@ mod_infinite_server <- function(id,dgm){
       geom_tile() +
       scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
       theme_minimal() +
-      labs(title = "Difference in R² (Reduced - Full)",
-           x = "Reliability X", y = "Reliability Z",
-           fill = "Δ R²")
+      labs(x = "Reliability X", y = "Reliability Z",
+           fill = "Δ R²")+
+      theme(legend.position = "bottom")
   })
 
   output$mse_diff_heatmap <- renderPlot({
@@ -239,9 +275,9 @@ mod_infinite_server <- function(id,dgm){
       geom_tile() +
       scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
       theme_minimal() +
-      labs(title = "Difference in MSE (Reduced - Full)",
-           x = "Reliability X", y = "Reliability Z",
-           fill = "Δ MSE")
+      labs(x = "Reliability X", y = "Reliability Z",
+           fill = "Δ MSE")+
+      theme(legend.position = "bottom")
   })
 
   output$rmse_diff_heatmap <- renderPlot({
@@ -251,13 +287,14 @@ mod_infinite_server <- function(id,dgm){
       geom_tile() +
       scale_fill_gradient2(midpoint = 0, low = "#440154",mid = "white", high = "#addc30") +
       theme_minimal() +
-      labs(title = "Difference in RMSE (Reduced - Full)",
-           x = "Reliability X", y = "Reliability Z",
-           fill = "Δ RMSE")
+      labs(x = "Reliability X", y = "Reliability Z",
+           fill = "Δ RMSE")+
+      theme(legend.position = "bottom")
   })
  return(list(df_estimates=df_estimates,bstar_f=ME_model, bstar_r=ME_OVB_model,
              beta_f=T_model, beta_r=OVB_model , Qstar_f=Qst_f, rse=rse, tss=tss,
-             bias_table=bias_T, fit_table=fit_T))
+             bias_table=bias_T, ests_bias_combined=df_combined, residual_results=res_results,
+             fit_table=fit_T))
   })
 }
 

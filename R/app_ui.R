@@ -46,10 +46,65 @@ app_ui <- function(request) {
               div(
                 style = "position: relative; height: 100%; overflow-y: auto;",
                 mod_sticky_params_ui("sticky_params_1"),
-                #tags$nav(),
                 div(id="surface", mod_surface_vis_ui("surface_vis_1")),
-                div(id = "population", mod_infinite_ui("infinite_1")),
-                div(id = "sample",     mod_finite_ui("finite_1")),
+                div(id="sim_settings", mod_finite_ui_sim_settings("finite_1")),
+                div(id="weight_comparison",
+                    h3("Regression Weights and Bias"),
+                    card(
+                      id="reg_weights",
+                      accordion(
+                        open=FALSE,
+                        accordion_panel("Instructions", HTML(INS_infinite)),
+                        accordion_panel("Background Information", HTML(BACKINF_infinite)),
+                        accordion_panel("Assumptions", HTML(ASSUMPTIONS_infinite))
+                      ),
+                    layout_columns(
+                        col_widths=c(6,6),
+                        div(tags$b("Infinite Sample Results"),
+                            mod_infinite_ui_bias_weights_combined("infinite_1")),
+                        div(tags$b("Simulation Results"),
+                            mod_finite_ui_estimate_summary("finite_1"),
+                            mod_finite_ui_estimate_plot("finite_1"))
+                      )
+                    )),
+                #####################
+                div(id="fit_info",
+                    h3("Model Fit"),
+                    card(
+                      id="fit",
+                      accordion(
+                        open=FALSE,
+                        accordion_panel("Instructions", HTML(INS_accuracy_pop)),
+                        accordion_panel("Background Information", HTML(BACKINF_accuracy_pop))
+                      ),
+                      layout_columns(
+                        col_widths=c(6,6),
+                        div(tags$b("Infinite Sample Results"),
+                            mod_infinite_ui_fit_table("infinite_1")),
+                        div(tags$b("Simulation Results"),
+                            mod_finite_ui_fit_summary("finite_1"))
+                      )
+                    )),
+                div(id="fit_difference",
+                    h3("Fit Difference"),
+                    card(
+                      id="fit_diff",
+                      accordion(
+                        open=FALSE,
+                        accordion_panel("Instructions", HTML("SPACEHOLDER")),
+                        accordion_panel("Background Information", HTML("SPACEHOLDER"))
+                      ),
+                      layout_columns(
+                        col_widths=c(6,6),
+                        div(tags$b("Infinite Sample Results"),
+                            mod_infinite_ui_fit_diff_plots("infinite_1")),
+                        div(tags$b("Simulation Results"),
+                            mod_finite_ui_fit_diff_plot("finite_1"))
+                      )
+                    )),
+                ##########################
+                #div(id = "population", mod_infinite_ui("infinite_1")),
+                #div(id = "sample",     mod_finite_ui("finite_1")),
                 div(id = "uncertainty",mod_uncertainty_ui("uncertainty_1"))
               )
     )

@@ -9,7 +9,6 @@
 #' @importFrom shiny NS tagList
 #' @importFrom mvtnorm rmvnorm
 #' @importFrom tidyr pivot_longer
-#' @importFrom gt cols_label tab_spanner gt
 #' @importFrom ggh4x facet_grid2
 #' @importFrom bslib  input_task_button
 #' @import ggplot2 viridis
@@ -29,70 +28,52 @@ mod_finite_ui <- function(id) {
          )
       )
     ),
-      # layout_columns(
-      #   col_widths = c(3,3,3),
-      #   div(
-      #     numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
-      #   div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
-      #     #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
-      #   div(
-      #     checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
-      #     conditionalPanel(
-      #       condition = sprintf("input['%s']", ns("use_skew")),
-      #       numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
-      #       numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
-      #     )
-      #   ),
-      #   div(input_task_button(ns("run"), "Run Simulation")
-      #     #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
-      #   )
-      # ),
-  div(
-      h3("Simulation Regression Weights"),
-      card_header("Weights"),
-      card(id="results_weight",
-           accordion(
-             open=FALSE,
-             layout_columns(
-               col_widths = c(8,4),
-               div(
-               accordion_panel("Instructions", HTML(INS_est_precision_sample)),
-               accordion_panel("Background Information", HTML(BACKINF_est_precision_sample))
-               ),
-               div(
-                 layout_columns(
-                   col_widths = c(12,12,12),
-                   div(
-                     numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
-                   div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
-                   #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
-                   div(
-                     checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
-                     conditionalPanel(
-                       condition = sprintf("input['%s']", ns("use_skew")),
-                       numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
-                       numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
-                     )
-                   ),
-                   div(input_task_button(ns("run"), "Run Simulation")
-                       #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
-                   )
-                 )
-               )
-               )
-           ),
-        layout_columns(
-          col_widths = c(5,5,2),
-          div(
-            h6("Regression Estimates"),
-            plotOutput(ns("plot_estimates"), height = "500px")
-          ),
-          div(
-            h6("Summary Table"),
-            uiOutput(ns("simulation_estimate_summ"))
-          )
-        )
-        )),
+  # div(
+  #     h3("Simulation Regression Weights"),
+  #     card_header("Weights"),
+  #     card(id="results_weight",
+  #          accordion(
+  #            open=FALSE,
+  #            layout_columns(
+  #              col_widths = c(8,4),
+  #              div(
+  #              accordion_panel("Instructions", HTML(INS_est_precision_sample)),
+  #              accordion_panel("Background Information", HTML(BACKINF_est_precision_sample))
+  #              ),
+  #              div(
+  #                layout_columns(
+  #                  col_widths = c(12,12,12),
+  #                  div(
+  #                    numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
+  #                  div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
+  #                  #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
+  #                  div(
+  #                    checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
+  #                    conditionalPanel(
+  #                      condition = sprintf("input['%s']", ns("use_skew")),
+  #                      numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
+  #                      numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
+  #                    )
+  #                  ),
+  #                  div(input_task_button(ns("run"), "Run Simulation")
+  #                      #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
+  #                  )
+  #                )
+  #              )
+  #              )
+  #          ),
+  #       layout_columns(
+  #         col_widths = c(5,5,2),
+  #         div(
+  #           h6("Regression Estimates"),
+  #           plotOutput(ns("plot_estimates"), height = "500px")
+  #         ),
+  #         div(
+  #           h6("Summary Table"),
+  #           uiOutput(ns("simulation_estimate_summ"))
+  #         )
+  #       )
+  #       )),
   div(
       h3("Results Fit and Differentiatability"),
       card_header("Fit"),
@@ -109,6 +90,76 @@ mod_finite_ui <- function(id) {
         )
       )
     )
+  )
+}
+
+mod_finite_ui_sim_settings<-function(id){
+  ns<-NS(id)
+  tagList(
+    div(
+        card(id="sim_settings",
+             accordion(
+               open=FALSE,
+               layout_columns(
+                 col_widths = c(8,4),
+                 div(
+                   accordion_panel("Instructions", HTML(INS_est_precision_sample)),
+                   accordion_panel("Background Information", HTML(BACKINF_est_precision_sample))
+                 ),
+                 div(
+                   layout_columns(
+                     col_widths = c(12,12,12),
+                     div(
+                       numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
+                     div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
+                     div(
+                       checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
+                       conditionalPanel(
+                         condition = sprintf("input['%s']", ns("use_skew")),
+                         numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
+                         numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
+                       )
+                     ),
+                     div(input_task_button(ns("run"), "Run Simulation")
+                         #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
+                     )
+                   )
+                 )
+               )
+             )
+        )
+    )
+  )
+}
+#' @noRd
+mod_finite_ui_estimate_summary <- function(id) {
+  ns <- NS(id)
+  tagList(
+    div(tableOutput(ns("sim_summary")))
+  )
+}
+#' @noRd
+mod_finite_ui_estimate_plot <- function(id) {
+  ns <- NS(id)
+  tagList(
+    div(
+      plotOutput(ns("plot_estimates"), height = "500px")
+)
+  )
+}
+#' @noRd
+mod_finite_ui_fit_summary <- function(id) {
+  ns <- NS(id)
+  tagList(
+    div(tableOutput(ns("fit_summary")))
+  )
+}
+
+#' @noRd
+mod_finite_ui_fit_diff_plot <- function(id) {
+  ns <- NS(id)
+  tagList(
+    div(plotOutput(ns("plot_fit_diff"), height = "500px"))
   )
 }
 
@@ -315,45 +366,109 @@ sim_results <- eventReactive(input$run, {
 
 # Regression Estimate Summary Table -------------------------------------------------------------------
 
-    output$simulation_estimate_summ <- renderUI({
+
+    sim_summary <- reactive({
       df_long <- df_sim()$df_b_long
       df_long <- df_long[!is.na(df_long$estimate), ]
-      n_vals  <- sort(unique(df_long$n))
 
-      rows <- lapply(n_vals, function(nn) {
-        sub      <- df_long[df_long$n == nn, ]
-        full_sub <- sub[sub$model == "Full", ]
-        red_sub  <- sub[sub$model == "Reduced", ]
+      # Aggregate to find numeric means and standard deviations
+      agg <- aggregate(estimate ~ n + model + parameter, data = df_long,
+                       FUN = function(x) c(mean = mean(x), sd = sd(x)))
+      agg <- do.call(data.frame, agg)
 
-        full_stats <- vapply(c("b0","b1","b2","b3"), function(p) {
-          v <- full_sub$estimate[full_sub$parameter == p]
-          sprintf("%.2f (%.2f)", mean(v), sd(v))
-        }, character(1))
+      # formatting
+      format_sim_cell <- function(mean_val, sd_val) {
+        if (is.na(mean_val)) return("-")
+        sprintf("%.2f (%.2f)", mean_val, sd_val) # 2 or 3 decimals to match the other table
+      }
+      agg$cell <- mapply(format_sim_cell, agg$estimate.mean, agg$estimate.sd)
 
-        red_stats <- vapply(c("b0","b1","b2"), function(p) {
-          v <- red_sub$estimate[red_sub$parameter == p]
-          sprintf("%.2f (%.2f)", mean(v), sd(v))
-        }, character(1))
+      # align parameters as columns
+      wide <- tidyr::pivot_wider(
+        agg[, c("n", "model", "parameter", "cell")],
+        names_from = parameter, values_from = cell
+      )
 
-        c(n = nn, full_stats, red_stats)
-      })
 
-      df_wide <- as.data.frame(do.call(rbind, rows), stringsAsFactors = FALSE)
-      colnames(df_wide) <- c("n",
-                             "full_b0","full_b1","full_b2","full_b3",
-                             "red_b0","red_b1","red_b2")
 
-      gt_tbl <- gt(df_wide) |>
-        tab_spanner(label = "Full model",    columns = c(full_b0, full_b1, full_b2, full_b3)) |>
-        tab_spanner(label = "Reduced model", columns = c(red_b0, red_b1, red_b2)) |>
-        cols_label(
-          full_b0 = "b0 (sd)", full_b1 = "b1 (sd)", full_b2 = "b2 (sd)", full_b3 = "b3 (sd)",
-          red_b0  = "b0 (sd)", red_b1  = "b1 (sd)", red_b2  = "b2 (sd)"
-        ) |>
-        cols_label(n = "n")
+      # sort ttables
+      full_tbl <- wide[wide$model == "Full", c("n", "b0", "b1", "b2", "b3")]
+      red_tbl  = wide[wide$model == "Reduced", c("n", "b0", "b1", "b2", "b3")]
 
-      gt_tbl
+      full_tbl <- full_tbl[order(full_tbl$n), ]
+      red_tbl  <- red_tbl[order(red_tbl$n), ]
+      red_tbl$b3 <- "-"
+
+      full_tbl <- cbind(Model = c("Full, Error", rep("", nrow(full_tbl) - 1)), full_tbl)
+      red_tbl  <- cbind(Model = c("Reduced, Error", rep("", nrow(red_tbl) - 1)), red_tbl)
+
+
+      combined_tbl <- rbind(full_tbl, red_tbl)
+
+      colnames(combined_tbl) <- c("Model", "n", "b₀ (sd)", "b₁ (sd)", "b₂ (sd)", "b₃ (sd)")
+
+      combined_tbl
+
     })
+
+
+    output$sim_summary <- renderTable({
+      sim_summary()
+    }, align = 'lccccc', striped = FALSE, bordered = TRUE)
+
+
+# simulation fit summary --------------------------------------------------
+
+
+
+    fit_summary <- reactive({
+      df_fit <- df_sim()$df_fit
+
+      df_fit_long <- tidyr::pivot_longer(
+        df_fit,
+        cols = c(r2_f, rse_f, mse_f, r2_r, rse_r, mse_r),
+        names_to = "metric_model", values_to = "estimate"
+      )
+      df_fit_long$model  <- ifelse(grepl("_f$", df_fit_long$metric_model), "Full", "Reduced")
+      df_fit_long$metric <- sub("_[fr]$", "", df_fit_long$metric_model)
+
+      # aggregate
+      agg <- aggregate(estimate ~ n + model + metric, data = df_fit_long,
+                       FUN = function(x) c(mean = mean(x), sd = sd(x)))
+      agg <- do.call(data.frame, agg)
+
+      format_sim_cell <- function(mean_val, sd_val) {
+        if (is.na(mean_val)) return("-")
+        sprintf("%.3f (%.3f)", mean_val, sd_val)
+      }
+      agg$cell <- mapply(format_sim_cell, agg$estimate.mean, agg$estimate.sd)
+
+
+      wide <- tidyr::pivot_wider(
+        agg[, c("n", "model", "metric", "cell")],
+        names_from = metric, values_from = cell
+      )
+
+      # split, order, and label like sim_summary
+      full_tbl <- wide[wide$model == "Full", c("n", "r2", "rse", "mse")]
+      red_tbl  <- wide[wide$model == "Reduced", c("n", "r2", "rse", "mse")]
+
+      full_tbl <- full_tbl[order(full_tbl$n), ]
+      red_tbl  <- red_tbl[order(red_tbl$n), ]
+
+      full_tbl <- cbind(Model = c("Full, Error", rep("", nrow(full_tbl) - 1)), full_tbl)
+      red_tbl  <- cbind(Model = c("Reduced, Error", rep("", nrow(red_tbl) - 1)), red_tbl)
+
+      combined_tbl <- rbind(full_tbl, red_tbl)
+
+      colnames(combined_tbl) <- c("Model", "n", "R² (sd)", "RMSE (sd)", "MSE (sd)")
+
+      combined_tbl
+    })
+
+    output$fit_summary <- renderTable({
+      fit_summary()
+    }, align = 'lcccc', striped = FALSE, bordered = TRUE)
 
 
 # Fit Difference Plot -----------------------------------------------------
@@ -382,42 +497,31 @@ sim_results <- eventReactive(input$run, {
         theme(legend.position="none")
     })
 # Fit Difference Table ----------------------------------------------------
-    output$fit_summ <- renderUI({
-      df_fit <- df_sim()$df_fit
-      n_vals <- sort(unique(df_fit$n))
-
-      rows <- lapply(n_vals, function(nn) {
-        sub <- df_fit[df_fit$n == nn, ]
-
-        full_stats <- c(
-          r2   = sprintf("%.3f (%.3f)", mean(sub$r2_f),  sd(sub$r2_f)),
-          rmse = sprintf("%.3f (%.3f)", mean(sub$rse_f), sd(sub$rse_f)),
-          mse  = sprintf("%.3f (%.3f)", mean(sub$mse_f), sd(sub$mse_f))
-        )
-        red_stats <- c(
-          r2   = sprintf("%.3f (%.3f)", mean(sub$r2_r),  sd(sub$r2_r)),
-          rmse = sprintf("%.3f (%.3f)", mean(sub$rse_r), sd(sub$rse_r)),
-          mse  = sprintf("%.3f (%.3f)", mean(sub$mse_r), sd(sub$mse_r))
-        )
-        c(n = nn, full_stats, red_stats)
-      })
-
-      df_wide <- as.data.frame(do.call(rbind, rows), stringsAsFactors = FALSE)
-      colnames(df_wide) <- c("n",
-                             "full_r2","full_rmse","full_mse",
-                             "red_r2","red_rmse","red_mse")
-
-      gt(df_wide) |>
-        tab_spanner(label = "Full model",    columns = c(full_r2, full_rmse, full_mse)) |>
-        tab_spanner(label = "Reduced model", columns = c(red_r2, red_rmse, red_mse)) |>
-        cols_label(
-          full_r2 = "R²", full_rmse = "RMSE", full_mse = "MSE",
-          red_r2  = "R²", red_rmse  = "RMSE", red_mse  = "MSE",
-          n = "n"
-        )
-    })
-
-  return(list(sim_results=sim_results))
+    # output$fit_summary <- renderTable({
+    #   df_fit <- df_sim()$df_fit
+    #   n_vals <- sort(unique(df_fit$n))
+    #
+    #   rows <- lapply(n_vals, function(nn) {
+    #     sub <- df_fit[df_fit$n == nn, ]
+    #
+    #     full_stats <- c(
+    #       r2   = sprintf("%.3f (%.3f)", mean(sub$r2_f),  sd(sub$r2_f)),
+    #       rmse = sprintf("%.3f (%.3f)", mean(sub$rse_f), sd(sub$rse_f)),
+    #       mse  = sprintf("%.3f (%.3f)", mean(sub$mse_f), sd(sub$mse_f))
+    #     )
+    #     red_stats <- c(
+    #       r2   = sprintf("%.3f (%.3f)", mean(sub$r2_r),  sd(sub$r2_r)),
+    #       rmse = sprintf("%.3f (%.3f)", mean(sub$rse_r), sd(sub$rse_r)),
+    #       mse  = sprintf("%.3f (%.3f)", mean(sub$mse_r), sd(sub$mse_r))
+    #     )
+    #     c(n = nn, full_stats, red_stats)
+    #   })
+    #
+    #   df_wide <- as.data.frame(do.call(rbind, rows), stringsAsFactors = FALSE)
+    #
+    #   df_wide
+    #
+    # })
   })
 }
 
