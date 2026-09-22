@@ -50,31 +50,31 @@ mod_uncertainty_ui <- function(id) {
                      div(uiOutput(ns("flip_table_by_n"))),
                      div(plotOutput(ns("flip_b1_by_n"))),
                      div(plotOutput(ns("flip_b2_by_n")))
-      )),
-      card(
-        card_header("Custom Sign Flips"),
-        div(
-          layout_columns(
-            col_widths=c(8,4),
-            div(textOutput(ns("flip_text"))),
-            div(      layout_columns(
-              col_widths=c(12,12),
-              div(
-                numericInput(ns("n_emp"), "Original Samplesize", value=25, min = 5))#,
-              #div(numericInput(ns("p_emp"), "Original number of estimates", value=3, min=3)
-              #)
-            ))
-            )
-          ),
-          layout_columns(col_widths=c(6,6),
-          div(
-            plotOutput(ns("flip_hist_x")),
-            plotOutput(ns("flip_hist_z"))),
-          div(
-            plotOutput(ns("jn_plot_x")),
-            plotOutput(ns("jn_plot_z")))
-        )
-      )
+      ))#,
+      # card(
+      #   card_header("Custom Sign Flips"),
+      #   div(
+      #     layout_columns(
+      #       col_widths=c(8,4),
+      #       div(textOutput(ns("flip_text"))),
+      #       div(      layout_columns(
+      #         col_widths=c(12,12),
+      #         div(
+      #           numericInput(ns("n_emp"), "Original Samplesize", value=25, min = 5))#,
+      #         #div(numericInput(ns("p_emp"), "Original number of estimates", value=3, min=3)
+      #         #)
+      #       ))
+      #       )
+      #     ),
+      #     layout_columns(col_widths=c(6,6),
+      #     div(
+      #       plotOutput(ns("flip_hist_x")),
+      #       plotOutput(ns("flip_hist_z"))),
+      #     div(
+      #       plotOutput(ns("jn_plot_x")),
+      #       plotOutput(ns("jn_plot_z")))
+      #   )
+      # )
   )
   )
 }

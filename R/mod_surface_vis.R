@@ -151,13 +151,14 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
     c_surface_est <- reactive(curved_surface(beta = b_f(), x_seq = x_seq(), z_seq = z_seq()))
     p_surface_est <- reactive(plane_surface(beta = b_r(), x_seq = x_seq(), z_seq = z_seq()))
 
+
     b_draws_f <- reactive({
-      req(input$show_finite_var, sim_results)
+      req(input$show_finite_var)
       sr <- sim_results(); req(sr)
       sr$results[[as.character(input$unc_n)]]$b_sim_f
     })
     b_draws_r <- reactive({
-      req(input$show_finite_var, sim_results)
+      req(input$show_finite_var)
       sr <- sim_results(); req(sr)
       sr$results[[as.character(input$unc_n)]]$b_sim_r
     })
@@ -189,9 +190,17 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
     render_panel <- function(c_surf, p_surf, upper_c = NULL, lower_c = NULL, upper_p = NULL, lower_p = NULL) {
       p <- plotly::plot_ly() |>
         plotly::add_surface(x = x_seq(), y = z_seq(), z = c_surf,
-                            opacity = 0.7, colorscale = list(c(0,"#440154"), c(1,"#440154")), showscale = FALSE) |>
+                            opacity = 0.7, colorscale = list(c(0,"#440154"), c(1,"#440154")), showscale = FALSE,
+                            contours = list(
+                              x = list(show = TRUE, color = "#EBECF0", width = 1),
+                              y = list(show = TRUE, color = "#EBECF0", width = 1)
+                            )) |>
         plotly::add_surface(x = x_seq(), y = z_seq(), z = p_surf,
-                            opacity = 0.7, colorscale = list(c(0,"#addc30"), c(1,"#addc30")), showscale = FALSE) |>
+                            opacity = 0.7, colorscale = list(c(0,"#addc30"), c(1,"#addc30")), showscale = FALSE,
+                            contours = list(
+                              x = list(show = TRUE, color = "black", width = 1),
+                              y = list(show = TRUE, color = "black", width = 1)
+                            )) |>
         plotly::add_trace(x = rep(input$eval_x, length(z_seq())), y = z_seq(), z = tangent_x(),
                           type = "scatter3d", mode = "lines", line = list(color = "#818380", width = 4),
                           opacity = 0.9, showlegend = FALSE) |>

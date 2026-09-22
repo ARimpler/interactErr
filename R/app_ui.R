@@ -67,7 +67,6 @@ app_ui <- function(request) {
                             mod_finite_ui_estimate_plot("finite_1"))
                       )
                     )),
-                #####################
                 div(id="fit_info",
                     h3("Model Fit"),
                     card(
@@ -102,12 +101,11 @@ app_ui <- function(request) {
                             mod_finite_ui_fit_diff_plot("finite_1"))
                       )
                     )),
-                ##########################
-                #div(id = "population", mod_infinite_ui("infinite_1")),
-                #div(id = "sample",     mod_finite_ui("finite_1")),
                 div(id = "uncertainty",mod_uncertainty_ui("uncertainty_1"))
               )
-    )
+    ),
+    nav_panel("Report",
+              mod_report_ui("report_1"))
     )
   )
 }

@@ -101,7 +101,7 @@ mod_finite_ui_sim_settings<-function(id){
              accordion(
                open=FALSE,
                layout_columns(
-                 col_widths = c(8,4),
+                 col_widths = c(4,4,4),
                  div(
                    accordion_panel("Instructions", HTML(INS_est_precision_sample)),
                    accordion_panel("Background Information", HTML(BACKINF_est_precision_sample))
@@ -124,13 +124,21 @@ mod_finite_ui_sim_settings<-function(id){
                          #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
                      )
                    )
-                 )
-               )
+                 ),
+                 div(plotOutput(ns("predictor_preview"), height = "220px"))               )
              )
         )
     )
   )
 }
+
+#' #' @noRd
+#' mod_finite_ui_predictor_preview <- function(id) {
+#'   ns <- NS(id)
+#'   tagList(
+#'     div(plotOutput(ns("predictor_preview"), height = "220px"))
+#'   )
+#' }
 #' @noRd
 mod_finite_ui_estimate_summary <- function(id) {
   ns <- NS(id)
@@ -173,6 +181,42 @@ mod_finite_server <- function(id, dgm, df_estimates){
       req(input$active_tab == "Explore")
     })
 
+
+
+
+# view predictor distributions --------------------------------------------
+
+    skew_x_d <- reactive(input$skew_x) |> debounce(300)
+    skew_z_d <- reactive(input$skew_z) |> debounce(300)
+
+    preview_sample <- reactive({
+      mx     <- p()$mean_x
+      mz     <- p()$mean_z
+      var_x  <- p()$var_x
+      var_z  <- p()$var_z
+      cov_xz <- p()$cov_xz
+
+      skew_x <- if (isTRUE(input$use_skew)) skew_x_d() else 0
+      skew_z <- if (isTRUE(input$use_skew)) skew_z_d() else 0
+
+      n_preview <- 3000  # single draw
+      dp <- get_dp_safe(c(mx, mz), var_x, var_z, cov_xz, c(skew_x, skew_z))
+      xz <- rmvsn_safe(n_preview, dp, c(mx, mz), var_x, var_z, cov_xz)
+      data.frame(x = xz[,1], z = xz[,2])
+    })
+
+    output$predictor_preview <- renderPlot({
+      df <- preview_sample()
+      df_long <- tidyr::pivot_longer(df, cols = c(x, z), names_to = "predictor", values_to = "value")
+
+      ggplot(df_long, aes(x = value, fill = predictor, color = predictor)) +
+        geom_density(alpha = 0.3) +
+        scale_fill_manual(values = c(x = "#440154", z = "#addc30")) +
+        scale_color_manual(values = c(x = "#440154", z = "#addc30")) +
+        labs(x = NULL, y = "Density", fill = NULL, color = NULL) +
+        theme_minimal() +
+        theme(legend.position = "bottom")
+    })
 # preparation -------------------------------------------------------------
 
     r<-1:3
@@ -217,8 +261,7 @@ sim_results <- eventReactive(input$run, {
       fit    <- matrix(NA, iter, 9)
       b_sim_r  <- matrix(NA, iter, length(r))
       b_sim_f  <- matrix(NA, iter, 4)
-      # x_bar    <- numeric(iter)
-      # z_bar    <- numeric(iter)
+
       for(i in 1:iter){
 #      tmp<-rmvnorm(n, c(mx,mz), matrix(c(var_x,cov_xz,cov_xz,var_z),2,2))
 
@@ -496,6 +539,10 @@ sim_results <- eventReactive(input$run, {
         theme_minimal()+
         theme(legend.position="none")
     })
+
+    return(list(
+      sim_results=sim_results
+    ))
 # Fit Difference Table ----------------------------------------------------
     # output$fit_summary <- renderTable({
     #   df_fit <- df_sim()$df_fit

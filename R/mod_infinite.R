@@ -92,7 +92,9 @@ mod_infinite_server <- function(id,dgm){
     params = dgm$params
   )
 # preparation -------------------------------------------------------------
-
+# observe({
+#   print(dgm$params())
+# })
 
   r<-1:3
   p<-reactive({dgm$params()})
@@ -123,7 +125,10 @@ mod_infinite_server <- function(id,dgm){
 
   df_estimates<-reactive({
     df <- data.frame(
-      Model = c("Full, No Error", "Full, Error", "Reduced, No Error", "Reduced, Error"),
+      Model = c("Full, No Error", sprintf("Full, &rho;<sub>x</sub>=%.2f, &rho;<sub>z</sub>=%.2f",
+                                          p()$rel_x,p()$rel_z), "Reduced, No Error",
+                sprintf("Reduced, &rho;<sub>x</sub>=%.2f, &rho;<sub>z</sub>=%.2f",
+                        p()$rel_x,p()$rel_z)),
       b0 = c(beta()[1], ME_model()[1], OVB_model()[1], ME_OVB_model()[1]),
       b1 = c(beta()[2], ME_model()[2], OVB_model()[2], ME_OVB_model()[2]),
       b2 = c(beta()[3], ME_model()[3], OVB_model()[3], ME_OVB_model()[3]),
@@ -136,8 +141,10 @@ mod_infinite_server <- function(id,dgm){
 # bias table --------------------------------------------------------------
   bias_T<-reactive({
     df<-data.frame(
-      Model=c("Full, No Error", "Full, Error", "Reduced, No Error", "Reduced, Error"),
-      B0=df_estimates()[,2]-df_estimates()[1,2],
+      Model = c("Full, No Error", sprintf("Full, &rho;<sub>x</sub>=%.2f, &rho;<sub>z</sub>=%.2f",
+                                          p()$rel_x,p()$rel_z), "Reduced, No Error",
+                sprintf("Reduced, &rho;<sub>x</sub>=%.2f, &rho;<sub>z</sub>=%.2f",
+                        p()$rel_x,p()$rel_z)),      B0=df_estimates()[,2]-df_estimates()[1,2],
       B1=df_estimates()[,3]-df_estimates()[1,3],
       B2=df_estimates()[,4]-df_estimates()[1,4],
       B3=df_estimates()[,5]-df_estimates()[1,5]
@@ -189,7 +196,10 @@ mod_infinite_server <- function(id,dgm){
 
 
     df <- data.frame(
-      Model = c("Full, No Error", "Full, Error","Reduced, No Error" ,"Reduced, Error"),
+      Model = c("Full, No Error", sprintf("Full, &rho;<sub>x</sub>=%.2f, &rho;<sub>z</sub>=%.2f",
+                                          p()$rel_x,p()$rel_z), "Reduced, No Error",
+                sprintf("Reduced, &rho;<sub>x</sub>=%.2f, &rho;<sub>z</sub>=%.2f",
+                        p()$rel_x,p()$rel_z)),
       R2 = c(fit_no_error[2], fit_ME[2],fit_ovb[2], fit_joint[2]),
       RMSE = c(fit_no_error[3], fit_ME[3],fit_ovb[3], fit_joint[3]),
       MSE = c(fit_no_error[1],  fit_ME[1],fit_ovb[1], fit_joint[1])
@@ -248,11 +258,13 @@ mod_infinite_server <- function(id,dgm){
 #
   output$combined_table <- renderTable({
     df_combined()
-  }, align = 'lcccc', bordered=TRUE)
+  }, align = 'lcccc', bordered=TRUE,
+  sanitize.text.function = function(x) x)
 #
   output$model_fit <- renderTable({
     fit_T()
-  }, digits = 3)
+  }, digits = 3,
+  sanitize.text.function = function(x) x)
 #
 #
 #
