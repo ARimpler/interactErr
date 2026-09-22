@@ -442,8 +442,10 @@ sim_results <- eventReactive(input$run, {
       red_tbl  <- red_tbl[order(red_tbl$n), ]
       red_tbl$b3 <- "-"
 
-      full_tbl <- cbind(Model = c("Full, Error", rep("", nrow(full_tbl) - 1)), full_tbl)
-      red_tbl  <- cbind(Model = c("Reduced, Error", rep("", nrow(red_tbl) - 1)), red_tbl)
+      full_tbl <- cbind(Model = c(sprintf("Full, &rho;<sub>x</sub>=%.2f, &rho;<sub>z</sub>=%.2f",
+                                          p()$rel_x,p()$rel_z), rep("", nrow(full_tbl) - 1)), full_tbl)
+      red_tbl  <- cbind(Model = c(sprintf("Reduced, &rho;<sub>x</sub>=%.2f, &rho;<sub>z</sub>=%.2f",
+                                          p()$rel_x,p()$rel_z), rep("", nrow(red_tbl) - 1)), red_tbl)
 
 
       combined_tbl <- rbind(full_tbl, red_tbl)
@@ -457,7 +459,8 @@ sim_results <- eventReactive(input$run, {
 
     output$sim_summary <- renderTable({
       sim_summary()
-    }, align = 'lccccc', striped = FALSE, bordered = TRUE)
+    }, align = 'lccccc', striped = FALSE, bordered = TRUE,
+    sanitize.text.function = function(x) x)
 
 
 # simulation fit summary --------------------------------------------------
@@ -499,8 +502,10 @@ sim_results <- eventReactive(input$run, {
       full_tbl <- full_tbl[order(full_tbl$n), ]
       red_tbl  <- red_tbl[order(red_tbl$n), ]
 
-      full_tbl <- cbind(Model = c("Full, Error", rep("", nrow(full_tbl) - 1)), full_tbl)
-      red_tbl  <- cbind(Model = c("Reduced, Error", rep("", nrow(red_tbl) - 1)), red_tbl)
+      full_tbl <- cbind(Model = c(sprintf("Full, &rho;<sub>x</sub>=%.2f, &rho;<sub>z</sub>=%.2f",
+                                          p()$rel_x,p()$rel_z), rep("", nrow(full_tbl) - 1)), full_tbl)
+      red_tbl  <- cbind(Model = c(sprintf("Reduced, &rho;<sub>x</sub>=%.2f, &rho;<sub>z</sub>=%.2f",
+                                          p()$rel_x,p()$rel_z), rep("", nrow(red_tbl) - 1)), red_tbl)
 
       combined_tbl <- rbind(full_tbl, red_tbl)
 
@@ -511,7 +516,8 @@ sim_results <- eventReactive(input$run, {
 
     output$fit_summary <- renderTable({
       fit_summary()
-    }, align = 'lcccc', striped = FALSE, bordered = TRUE)
+    }, align = 'lcccc', striped = FALSE, bordered = TRUE,
+    sanitize.text.function = function(x) x)
 
 
 # Fit Difference Plot -----------------------------------------------------
