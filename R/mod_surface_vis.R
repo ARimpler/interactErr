@@ -21,13 +21,7 @@ mod_surface_vis_ui <- function(id) {
       )
     ),
     layout_columns(
-      col_widths = c(5, 5,2),
-      card(title = "Data-generating model (infinite sample)", height = "605px", full_screen = TRUE,
-           plotlyOutput(ns("dgm_surface"), height = "100%"),
-           textOutput(ns("model_equation_true"))),
-      card(title = "Applied model (infinite sample)", height = "605px", full_screen = TRUE,
-           plotlyOutput(ns("est_surface"), height = "100%"),
-           textOutput(ns("model_equation_applied"))),
+      col_widths = c(2,3,3,3),
       card(title="Plot Controls",
            height="605px",
            layout_columns(
@@ -42,70 +36,139 @@ mod_surface_vis_ui <- function(id) {
                  numericInput(ns("eval_x"), "X", value = 0),
                  numericInput(ns("eval_z"), "Z", value = 0))
            )
-           )
+      ),
+      card(title = "Data-generating model (infinite sample)", height = "605px", full_screen = TRUE,
+           plotlyOutput(ns("dgm_surface"), height = "100%"),
+           textOutput(ns("model_equation_true"))),
+      card(title = "Applied model (infinite sample)", height = "605px", full_screen = TRUE,
+           plotlyOutput(ns("applied_surface"), height = "100%"),
+           textOutput(ns("model_equation_applied"))),
+      card(title = "Estimated model (Simulated samples)", height = "605px", full_screen = TRUE,
+           plotlyOutput(ns("est_surface"), height = "100%"),
+           textOutput(ns("model_equation_estimated")))
     ),
     tags$script(HTML(sprintf("
 (function() {
-  var idA = '%s', idB = '%s';
+  var idA = '%s', idB = '%s', idC = '%s';
   var syncing = false;
+  var cBound = false;
 
-  function bindPair() {
-    var elA = document.getElementById(idA);
-    var elB = document.getElementById(idB);
-    if (!elA || !elB || !elA.layout || !elB.layout) return;
+  function getEl(id) {
+    var el = document.getElementById(id);
+    return (el && el.layout) ? el : null;
+  }
 
-    if (elA.removeAllListeners) elA.removeAllListeners('plotly_relayout');
-    if (elB.removeAllListeners) elB.removeAllListeners('plotly_relayout');
+  function currentGroup() {
+    var group = [idA, idB];
+    if (getEl(idC)) group.push(idC);
+    return group;
+  }
 
-    function bind(src, dst) {
+  function bindGroup() {
+    var ids = currentGroup();
+    var els = ids.map(getEl);
+    if (els.some(function(el) { return !el; })) return;
+
+    els.forEach(function(el) {
+      if (el.removeAllListeners) el.removeAllListeners('plotly_relayout');
+    });
+
+    els.forEach(function(src, i) {
       src.on('plotly_relayout', function(ed) {
         if (syncing || !ed['scene.camera']) return;
         syncing = true;
-        Plotly.relayout(dst, {'scene.camera': ed['scene.camera']}).then(function() {
-          syncing = false;
-        });
+        var updates = els
+          .filter(function(_, j) { return j !== i; })
+          .map(function(dst) { return Plotly.relayout(dst, {'scene.camera': ed['scene.camera']}); });
+        Promise.all(updates).then(function() { syncing = false; });
       });
-    }
-    bind(elA, elB);
-    bind(elB, elA);
+    });
+
+    cBound = ids.indexOf(idC) !== -1;
   }
 
-  function trySetup() {
-    var elA = document.getElementById(idA), elB = document.getElementById(idB);
-    if (!elA || !elB || !elA.layout || !elB.layout) {
-      setTimeout(trySetup, 200);
+  function trySetupAB() {
+    if (!getEl(idA) || !getEl(idB)) {
+      setTimeout(trySetupAB, 200);
       return;
     }
-    bindPair();
+    bindGroup();
   }
-  trySetup();
+  trySetupAB();
+
+  // Watch for plot C appearing later (e.g. after simulation runs) and fold it in
+  function checkForC() {
+    if (!cBound && getEl(idC)) {
+      bindGroup();
+    }
+  }
 
   $(document).on('shiny:value', function(ev) {
     if (ev.name === idA || ev.name === idB) {
-      setTimeout(bindPair, 150);
+      setTimeout(bindGroup, 150);
+    }
+    if (ev.name === idC) {
+      setTimeout(checkForC, 150);
     }
   });
+
+  // fallback poll in case shiny:value doesn't fire cleanly for idC's first render
+  var pollC = setInterval(function() {
+    checkForC();
+    if (cBound) clearInterval(pollC);
+  }, 500);
 })();
-", ns("dgm_surface"), ns("est_surface")))),
+", ns("dgm_surface"), ns("applied_surface"), ns("est_surface")))),
+#     tags$script(HTML(sprintf("
+# (function() {
+#   var idA = '%s', idB = '%s';
+#   var syncing = false;
+#
+#   function bindPair() {
+#     var elA = document.getElementById(idA);
+#     var elB = document.getElementById(idB);
+#     if (!elA || !elB || !elA.layout || !elB.layout) return;
+#
+#     if (elA.removeAllListeners) elA.removeAllListeners('plotly_relayout');
+#     if (elB.removeAllListeners) elB.removeAllListeners('plotly_relayout');
+#
+#     function bind(src, dst) {
+#       src.on('plotly_relayout', function(ed) {
+#         if (syncing || !ed['scene.camera']) return;
+#         syncing = true;
+#         Plotly.relayout(dst, {'scene.camera': ed['scene.camera']}).then(function() {
+#           syncing = false;
+#         });
+#       });
+#     }
+#     bind(elA, elB);
+#     bind(elB, elA);
+#   }
+#
+#   function trySetup() {
+#     var elA = document.getElementById(idA), elB = document.getElementById(idB);
+#     if (!elA || !elB || !elA.layout || !elB.layout) {
+#       setTimeout(trySetup, 200);
+#       return;
+#     }
+#     bindPair();
+#   }
+#   trySetup();
+#
+#   $(document).on('shiny:value', function(ev) {
+#     if (ev.name === idA || ev.name === idB) {
+#       setTimeout(bindPair, 150);
+#     }
+#   });
+# })();
+# ", ns("dgm_surface"), ns("est_surface")))),
     card(
       title = "Range of Predictors",
       accordion(open = FALSE,
                 accordion_panel("Instructions", HTML(INS_3d_vis)),
                 accordion_panel("Background Information", HTML(BACKINF_3d_vis)),
                 accordion_panel("Assumptions", HTML(ASSUMPTIONS_3d_vis))
-      )#,
-      # layout_columns(
-      #   col_widths = c(4, 4, 4),
-      #   div(h6("Range of X"),
-      #       numericInput(ns("lower_x"), "Lower Bound X", value = -8),
-      #       numericInput(ns("upper_x"), "Upper Bound X", value = 8)),
-      #   div(h6("Range of Z"),
-      #       numericInput(ns("lower_z"), "Lower Bound Z", value = -8),
-      #       numericInput(ns("upper_z"), "Upper Bound Z", value = 8)),
-      #   div(h6("Evaluation Point"),
-      #       numericInput(ns("eval_x"), "X", value = 0),
-      #       numericInput(ns("eval_z"), "Z", value = 0))
-      # )
+      )
     )
   ))
 }
@@ -121,10 +184,10 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
     z_seq <- reactive(seq(input$lower_z, input$upper_z, length.out = 100))
 
     y_range <- reactive({
-      vals <- c(c_surface_dgm(), c_surface_est())
+      vals <- c(c_surface_dgm(), c_surface_applied())
       if (isTRUE(input$show_finite_var)) {
         vals <- c(vals,
-                  c_surface_est() + band_f(), c_surface_est() - band_f())
+                  c_surface_applied() + band_f(), c_surface_applied() - band_f())
       }
       range(vals, finite = TRUE)
     })
@@ -147,10 +210,11 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
     c_surface_dgm <- reactive(curved_surface(beta = beta_f(), x_seq = x_seq(), z_seq = z_seq()))
     p_surface_dgm <- reactive(plane_surface(beta = beta_r(), x_seq = x_seq(), z_seq = z_seq()))
 
-    # ---- Applied/estimated panel (b_f/b_r) ----
-    c_surface_est <- reactive(curved_surface(beta = b_f(), x_seq = x_seq(), z_seq = z_seq()))
-    p_surface_est <- reactive(plane_surface(beta = b_r(), x_seq = x_seq(), z_seq = z_seq()))
+    # ---- Applied panel (b_f/b_r infinite) ----
+    c_surface_applied <- reactive(curved_surface(beta = b_f(), x_seq = x_seq(), z_seq = z_seq()))
+    p_surface_applied <- reactive(plane_surface(beta = b_r(), x_seq = x_seq(), z_seq = z_seq()))
 
+# estimated panel ---------------------------------------------------------
 
     b_draws_f <- reactive({
       req(input$show_finite_var)
@@ -162,6 +226,17 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
       sr <- sim_results(); req(sr)
       sr$results[[as.character(input$unc_n)]]$b_sim_r
     })
+
+    E_b_f<-reactive({
+      colMeans(b_draws_f())
+    })
+    E_b_r<-reactive({
+      colMeans(b_draws_r())
+    })
+
+    c_surface_est <- reactive(curved_surface(beta = E_b_f(), x_seq = x_seq(), z_seq = z_seq()))
+    p_surface_est <- reactive(plane_surface(beta = E_b_r(), x_seq = x_seq(), z_seq = z_seq()))
+
 
     band_f <- reactive({
       Sigma <- cov(b_draws_f())
@@ -232,11 +307,11 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
       ))
     }
     output$dgm_surface <- plotly::renderPlotly({
-      # up_c <- if (isTRUE(input$show_finite_var)) c_surface_dgm() + band_f() else NULL
-      # lo_c <- if (isTRUE(input$show_finite_var)) c_surface_dgm() - band_f() else NULL
-      # up_p <- if (isTRUE(input$show_finite_var)) p_surface_dgm() + band_r() else NULL
-      # lo_p <- if (isTRUE(input$show_finite_var)) p_surface_dgm() - band_r() else NULL
       render_panel(c_surface_dgm(), p_surface_dgm(), upper_c=NULL, lower_c=NULL, upper_p=NULL, lower_p=NULL)
+    })
+
+    output$applied_surface <- plotly::renderPlotly({
+      render_panel(c_surface_applied(), p_surface_applied(),upper_c=NULL, lower_c=NULL, upper_p=NULL, lower_p=NULL)
     })
 
     output$est_surface <- plotly::renderPlotly({
@@ -262,6 +337,19 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
     })
     output$model_equation_applied <- renderText({
       b <- b_f()
+      x_eval <- ev_point()$x
+      z_eval <- ev_point()$z
+      b0<-b[1]+b[2]*x_eval+b[3]*z_eval+b[4]*x_eval*z_eval
+      b1<-b[2]+b[4]*z_eval
+      b2<-b[3]+b[4]*x_eval
+      b3<-b[4]
+      sprintf(
+        "At your specified evaluation point x= %.2f, z= %.2f the model parameters are b0=%.2f, b1= %.2f, b2=%.2f. The slope of the interaction term does not change and is b3= %.2f.",
+        x_eval, z_eval, b0, b1, b2, b3
+      )
+    })
+    output$model_equation_estimated <- renderText({
+      b <- E_b_f()
       x_eval <- ev_point()$x
       z_eval <- ev_point()$z
       b0<-b[1]+b[2]*x_eval+b[3]*z_eval+b[4]*x_eval*z_eval
