@@ -37,7 +37,7 @@ app_ui <- function(request) {
     page_navbar(
       id="nav",
       theme = bs_theme(version = 5, bootswatch = "flatly"),
-      sidebar=sidebar(id="sb",title="Specifications",width="350px",open="closed", mod_dgm_ui("dgm_1")),
+     #sidebar=sidebar(id="sb",title="Specifications",width="350px",open="closed", mod_dgm_ui("dgm_1")),
     nav_panel("Home",
               #sidebar(open=FALSE),
               fluidRow(card(HTML(intro)))),
@@ -45,7 +45,8 @@ app_ui <- function(request) {
               fillable=FALSE,
               div(
                 style = "position: relative; height: 100%; overflow-y: auto;",
-                mod_sticky_params_ui("sticky_params_1"),
+                #mod_sticky_params_ui("sticky_params_1"),
+                mod_dgm_ui("dgm_1"),
                 div(id="surface", mod_surface_vis_ui("surface_vis_1")),
                 div(id="sim_settings", mod_finite_ui_sim_settings("finite_1")),
                 div(id="weight_comparison",
