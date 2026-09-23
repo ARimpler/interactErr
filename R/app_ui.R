@@ -47,8 +47,8 @@ app_ui <- function(request) {
                 style = "position: relative; height: 100%; overflow-y: auto;",
                 #mod_sticky_params_ui("sticky_params_1"),
                 mod_dgm_ui("dgm_1"),
-                div(id="surface", mod_surface_vis_ui("surface_vis_1")),
                 div(id="sim_settings", mod_finite_ui_sim_settings("finite_1")),
+                div(id="surface", mod_surface_vis_ui("surface_vis_1")),
                 div(id="weight_comparison",
                     h3("Regression Weights and Bias"),
                     card(

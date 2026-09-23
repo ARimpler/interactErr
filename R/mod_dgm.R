@@ -14,8 +14,9 @@ mod_dgm_ui <- function(id) {
     tags$style(HTML("
       .sticky-params-card { position: sticky; top: 0px; z-index: 999;
         background-color: #f8f9fa; border-bottom: 1px solid #dee2e6; }
-      .sticky-params-card table td .shiny-input-container { width: 90px; margin-bottom: 0; }
-      .sticky-params-card table td .form-control { padding: 2px 4px; height: auto; }
+      .sticky-params-card table td .shiny-input-container { width: 100%; margin-bottom: 0; }
+      .sticky-params-card table td .form-control { padding: 2px 4px; width:100%; height: auto; }
+      .sticky-params-card table { table-layout: fixed; width: 100%; }
       .sticky-params-card table th, .sticky-params-card table td {
         vertical-align: middle; text-align: center;
       }
@@ -26,8 +27,9 @@ mod_dgm_ui <- function(id) {
       full_screen = FALSE,
       class = "sticky-params-card",
       layout_columns(
-        col_widths = c(4,2,4,2),
+        col_widths = c(5,1,5,1),
         div(
+          #style = "max-width: 640px;",
           h6("Input Parameters"),
           tags$table(
             class = "table table-striped table-bordered",
@@ -50,7 +52,7 @@ mod_dgm_ui <- function(id) {
             )
           )
         ),
-        div(style = "max-width: 160px;",
+        div(#style = "max-width: 160px;",
             h6(HTML("<br>")),
             tags$table(
               class = "table table-striped table-bordered",
@@ -58,6 +60,7 @@ mod_dgm_ui <- function(id) {
               tags$tbody(tags$tr(tags$td(numericInput(ns("cov_xz"),NULL, value = 0)))))
             ),
         div(
+          #style = "max-width: 640px;",
           h6("Input Regression Weights"),
           tooltip(
             tags$table(
@@ -75,7 +78,7 @@ mod_dgm_ui <- function(id) {
             HTML("β₀=intercept;<br> β₁=linear effect x;<br> β₂=linear effect z;<br> β₃=interaction effect")
           )
         ),
-        div(style = "max-width: 160px;",
+        div(#style = "max-width: 160px;",
             h6(HTML("<br>")),
             tags$table(
               class = "table table-striped table-bordered",
