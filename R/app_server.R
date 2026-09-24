@@ -6,6 +6,7 @@
 #' @noRd
 app_server <- function(input, output, session) {
 
+
   observeEvent(input$nav, {
     bslib::toggle_sidebar(id = "sb", open = input$nav != "Home")
   }, ignoreInit = FALSE)
@@ -21,6 +22,7 @@ app_server <- function(input, output, session) {
   mod_surface_vis_server("surface_vis_1",
                          b_f=infinite$bstar_f,  b_r=infinite$bstar_r,
                          beta_f=infinite$beta_f, beta_r=infinite$beta_r,
-                         sim_results=finite$sim_results)
+                         sim_results=finite$sim_results,
+                         dgm=dgm)
   mod_report_server("report_1", dgm=dgm, infinite=infinite)
   }

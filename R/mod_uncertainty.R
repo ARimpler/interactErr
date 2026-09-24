@@ -70,7 +70,9 @@ mod_uncertainty_ui <- function(id) {
                 )
 
       ),
-      div(HTML(INS_flip_figs)),
+      div(
+        h6(HTML("<br>")),
+        HTML(INS_flip_figs)),
       layout_columns(col_widths=c(4,4,4),
                      div(uiOutput(ns("flip_table_by_n"))),
                      div(plotOutput(ns("flip_b1_by_n"))),
