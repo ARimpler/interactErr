@@ -113,6 +113,7 @@ mod_infinite_server <- function(id,dgm){
   Qst_r<-reactive({Qst_f()[r,r]})
 
   v_ey<-reactive({dgm$v_ey()})
+
 # Computation --------------------------------------------------------------
 
 
@@ -293,15 +294,25 @@ mod_infinite_server <- function(id,dgm){
     fit_T()
   }, digits = 3,
   sanitize.text.function = function(x) x)
-#
-#
-#
+
+
+
+
+
+
+
+observe({print(p()$rel_z)})
+
   output$r2_diff_heatmap <- renderPlot({
 
     df <- res_results()
     ggplot(df, aes(x = rel_x, y = rel_z, fill = E_R2_d)) +
       geom_tile() +
       scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
+      geom_hline(yintercept = floor(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
+      geom_hline(yintercept = ceiling(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
+      geom_vline(xintercept = floor(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
+      geom_vline(xintercept = ceiling(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
       theme_minimal() +
       labs(x = "Reliability X", y = "Reliability Z",
            fill = "Δ R²")+
@@ -314,6 +325,10 @@ mod_infinite_server <- function(id,dgm){
     ggplot(df, aes(x = rel_x, y = rel_z, fill = E_RSE_d)) +
       geom_tile() +
       scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
+      geom_hline(yintercept = floor(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
+      geom_hline(yintercept = ceiling(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
+      geom_vline(xintercept = floor(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
+      geom_vline(xintercept = ceiling(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
       theme_minimal() +
       labs(x = "Reliability X", y = "Reliability Z",
            fill = "Δ MSE")+
@@ -325,6 +340,10 @@ mod_infinite_server <- function(id,dgm){
     df <- res_results()
     ggplot(df, aes(x = rel_x, y = rel_z, fill = E_RMSE_d)) +
       geom_tile() +
+      geom_hline(yintercept = floor(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
+      geom_hline(yintercept = ceiling(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
+      geom_vline(xintercept = floor(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
+      geom_vline(xintercept = ceiling(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
       scale_fill_gradient2(midpoint = 0, low = "#440154",mid = "white", high = "#addc30") +
       theme_minimal() +
       labs(x = "Reliability X", y = "Reliability Z",
