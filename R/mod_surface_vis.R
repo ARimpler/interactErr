@@ -259,23 +259,28 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
       sqrt(q) * sqrt(pointwise_var(design_grid_r(), Sigma))
     })
 
-    ev_point <- reactive({
-      req(!matrix_has_error())
-      b <- beta_f(); x <- input$eval_x; z <- input$eval_z
-      list(x = x, z = z, y = b[1] + b[2]*x + b[3]*z + b[4]*x*z)
-    })
-    tangent_x <- reactive({
-      req(!matrix_has_error())
-      ev <- ev_point(); b <- beta_f()
-      ev$y + (b[3] + b[4]*ev$x) * (z_seq() - ev$z)
-    })
-    tangent_z <- reactive({
-      req(!matrix_has_error())
-      ev <- ev_point(); b <- beta_f()
-      ev$y + (b[2] + b[4]*ev$z) * (x_seq() - ev$x)
-    })
+    # ev_point <- reactive({
+    #   req(!matrix_has_error())
+    #   b <- beta_f(); x <- input$eval_x; z <- input$eval_z
+    #   list(x = x, z = z, y = b[1] + b[2]*x + b[3]*z + b[4]*x*z)
+    # })
+    # tangent_x <- reactive({
+    #   req(!matrix_has_error())
+    #   ev <- ev_point(); b <- beta_f()
+    #   ev$y + (b[3] + b[4]*ev$x) * (z_seq() - ev$z)
+    # })
+    # tangent_z <- reactive({
+    #   req(!matrix_has_error())
+    #   ev <- ev_point(); b <- beta_f()
+    #   ev$y + (b[2] + b[4]*ev$z) * (x_seq() - ev$x)
+    # })
 
-    render_panel <- function(c_surf, p_surf, upper_c = NULL, lower_c = NULL, upper_p = NULL, lower_p = NULL) {
+    render_panel <- function(c_surf, p_surf,b, upper_c = NULL, lower_c = NULL, upper_p = NULL, lower_p = NULL) {
+
+      ev_point <- make_ev_point(b, input$eval_x, input$eval_z)
+      tangent_x <- make_tangent_x(b, ev_point, z_seq())
+      tangent_z <- make_tangent_z(b, ev_point, x_seq())
+
       p <- plotly::plot_ly() |>
         plotly::add_surface(x = x_seq(), y = z_seq(), z = c_surf,
                             opacity = 0.7, colorscale = list(c(0,"#440154"), c(1,"#440154")), showscale = FALSE,
@@ -289,13 +294,13 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
                               x = list(show = TRUE, color = "black", width = 1),
                               y = list(show = TRUE, color = "black", width = 1)
                             )) |>
-        plotly::add_trace(x = rep(input$eval_x, length(z_seq())), y = z_seq(), z = tangent_x(),
+        plotly::add_trace(x = rep(input$eval_x, length(z_seq())), y = z_seq(), z = tangent_x,
                           type = "scatter3d", mode = "lines", line = list(color = "#818380", width = 4),
                           opacity = 0.9, showlegend = FALSE) |>
-        plotly::add_trace(x = x_seq(), y = rep(input$eval_z, length(x_seq())), z = tangent_z(),
+        plotly::add_trace(x = x_seq(), y = rep(input$eval_z, length(x_seq())), z = tangent_z,
                           type = "scatter3d", mode = "lines", line = list(color = "#3E424B", width = 4),
                           opacity = 0.9, showlegend = FALSE) |>
-        plotly::add_markers(x = ev_point()$x, y = ev_point()$z, z = ev_point()$y,
+        plotly::add_markers(x = ev_point$x, y = ev_point$z, z = ev_point$y,
                             marker = list(color = "black", size = 5), showlegend = FALSE)
 
       if (!is.null(upper_c) && !is.null(lower_c)) {
@@ -320,11 +325,11 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
       ))
     }
     output$dgm_surface <- plotly::renderPlotly({
-      render_panel(c_surface_dgm(), p_surface_dgm(), upper_c=NULL, lower_c=NULL, upper_p=NULL, lower_p=NULL)
+      render_panel(c_surface_dgm(), p_surface_dgm(),b=beta_f(), upper_c=NULL, lower_c=NULL, upper_p=NULL, lower_p=NULL)
     })
 
     output$applied_surface <- plotly::renderPlotly({
-      render_panel(c_surface_applied(), p_surface_applied(),upper_c=NULL, lower_c=NULL, upper_p=NULL, lower_p=NULL)
+      render_panel(c_surface_applied(), p_surface_applied(),b=b_f(),upper_c=NULL, lower_c=NULL, upper_p=NULL, lower_p=NULL)
     })
 
     output$est_surface <- plotly::renderPlotly({
@@ -332,14 +337,15 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
       lo_c <- if (isTRUE(input$show_finite_var)) c_surface_est() - band_f() else NULL
       up_p <- if (isTRUE(input$show_finite_var)) p_surface_est() + band_r() else NULL
       lo_p <- if (isTRUE(input$show_finite_var)) p_surface_est() - band_r() else NULL
-      render_panel(c_surface_est(), p_surface_est(), up_c, lo_c, up_p, lo_p)
+      render_panel(c_surface_est(), p_surface_est(),b=E_b_f(), up_c, lo_c, up_p, lo_p)
     })
 
     output$model_equation_true <- renderText({
       req(!matrix_has_error())
       b <- beta_f()
-      x_eval <- ev_point()$x
-      z_eval <- ev_point()$z
+      ev_point<-make_ev_point(b, input$eval_x, input$eval_z)
+      x_eval <- ev_point$x
+      z_eval <- ev_point$z
       b0<-b[1]+b[2]*x_eval+b[3]*z_eval+b[4]*x_eval*z_eval
       b1<-b[2]+b[4]*z_eval
       b2<-b[3]+b[4]*x_eval
@@ -352,8 +358,9 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
     output$model_equation_applied <- renderText({
       req(!matrix_has_error())
       b <- b_f()
-      x_eval <- ev_point()$x
-      z_eval <- ev_point()$z
+      ev_point<-make_ev_point(b, input$eval_x, input$eval_z)
+      x_eval <- ev_point$x
+      z_eval <- ev_point$z
       b0<-b[1]+b[2]*x_eval+b[3]*z_eval+b[4]*x_eval*z_eval
       b1<-b[2]+b[4]*z_eval
       b2<-b[3]+b[4]*x_eval
@@ -365,8 +372,9 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
     })
     output$model_equation_estimated <- renderText({
       b <- E_b_f()
-      x_eval <- ev_point()$x
-      z_eval <- ev_point()$z
+      ev_point<-make_ev_point(b, input$eval_x, input$eval_z)
+      x_eval <- ev_point$x
+      z_eval <- ev_point$z
       b0<-b[1]+b[2]*x_eval+b[3]*z_eval+b[4]*x_eval*z_eval
       b1<-b[2]+b[4]*z_eval
       b2<-b[3]+b[4]*x_eval
