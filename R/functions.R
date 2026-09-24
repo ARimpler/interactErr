@@ -224,3 +224,17 @@ apply_camera <- function(plot_id, cam) {
       )
     )
 }
+
+
+
+# tangent functions -------------------------------------------------------
+
+make_ev_point <- function(b, x, z) {
+  list(x = x, z = z, y = b[1] + b[2]*x + b[3]*z + b[4]*x*z)
+}
+make_tangent_x <- function(b, ev, z_seq) {
+  ev$y + (b[3] + b[4]*ev$x) * (z_seq - ev$z)
+}
+make_tangent_z <- function(b, ev, x_seq) {
+  ev$y + (b[2] + b[4]*ev$z) * (x_seq - ev$x)
+}
