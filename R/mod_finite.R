@@ -247,7 +247,7 @@ sim_results <- eventReactive(input$run, {
 
 
     results <- list()
-    ns<-c(25,50,100, 200,500,1000)
+    ns<-c(25,50,100, 250,500,1000)
     dp <- get_dp_safe(c(mx, mz), var_x, var_z, cov_xz, c(skew_x, skew_z))
     for(n in ns){
       big_xz <- rmvsn_safe(n * iter, dp, c(mx, mz), var_x, var_z, cov_xz)

@@ -176,9 +176,11 @@ mod_surface_vis_ui <- function(id) {
 #' surface_vis Server Functions
 #'
 #' @noRd
-mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = NULL) {
+mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results = NULL) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    matrix_has_error<-reactive({dgm$matrix_has_error()})
+
 
     x_seq <- reactive(seq(input$lower_x, input$upper_x, length.out = 100))
     z_seq <- reactive(seq(input$lower_z, input$upper_z, length.out = 100))
@@ -207,12 +209,20 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
     }
 
     # ---- DGM panel (beta_f/beta_r; no sampling variability by construction) ----
-    c_surface_dgm <- reactive(curved_surface(beta = beta_f(), x_seq = x_seq(), z_seq = z_seq()))
-    p_surface_dgm <- reactive(plane_surface(beta = beta_r(), x_seq = x_seq(), z_seq = z_seq()))
+    c_surface_dgm <- reactive({
+      req(!matrix_has_error())
+      curved_surface(beta = beta_f(), x_seq = x_seq(), z_seq = z_seq())})
+    p_surface_dgm <- reactive({
+      req(!matrix_has_error())
+      plane_surface(beta = beta_r(), x_seq = x_seq(), z_seq = z_seq())})
 
     # ---- Applied panel (b_f/b_r infinite) ----
-    c_surface_applied <- reactive(curved_surface(beta = b_f(), x_seq = x_seq(), z_seq = z_seq()))
-    p_surface_applied <- reactive(plane_surface(beta = b_r(), x_seq = x_seq(), z_seq = z_seq()))
+    c_surface_applied <- reactive({
+      req(!matrix_has_error())
+      curved_surface(beta = b_f(), x_seq = x_seq(), z_seq = z_seq())})
+    p_surface_applied <- reactive({
+      req(!matrix_has_error())
+      plane_surface(beta = b_r(), x_seq = x_seq(), z_seq = z_seq())})
 
 # estimated panel ---------------------------------------------------------
 
@@ -250,14 +260,17 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
     })
 
     ev_point <- reactive({
+      req(!matrix_has_error())
       b <- beta_f(); x <- input$eval_x; z <- input$eval_z
       list(x = x, z = z, y = b[1] + b[2]*x + b[3]*z + b[4]*x*z)
     })
     tangent_x <- reactive({
+      req(!matrix_has_error())
       ev <- ev_point(); b <- beta_f()
       ev$y + (b[3] + b[4]*ev$x) * (z_seq() - ev$z)
     })
     tangent_z <- reactive({
+      req(!matrix_has_error())
       ev <- ev_point(); b <- beta_f()
       ev$y + (b[2] + b[4]*ev$z) * (x_seq() - ev$x)
     })
@@ -323,6 +336,7 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
     })
 
     output$model_equation_true <- renderText({
+      req(!matrix_has_error())
       b <- beta_f()
       x_eval <- ev_point()$x
       z_eval <- ev_point()$z
@@ -336,6 +350,7 @@ mod_surface_vis_server <- function(id, beta_f, beta_r, b_f, b_r, sim_results = N
       )
     })
     output$model_equation_applied <- renderText({
+      req(!matrix_has_error())
       b <- b_f()
       x_eval <- ev_point()$x
       z_eval <- ev_point()$z

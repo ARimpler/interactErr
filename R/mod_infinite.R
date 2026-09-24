@@ -86,15 +86,16 @@ mod_infinite_ui_fit_table <- function(id) {
 mod_infinite_server <- function(id,dgm){
   moduleServer(id, function(input, output, session){
   ns <- session$ns
-
-  mod_sticky_params_server(
-    "sticky_params",
-    params = dgm$params
-  )
+  inputs_ok<-reactive({dgm$inputs_ok()})
+  # mod_sticky_params_server(
+  #   "sticky_params",
+  #   params = dgm$params
+  # )
 # preparation -------------------------------------------------------------
 # observe({
 #   print(dgm$params())
 # })
+  matrix_has_error<-reactive({dgm$matrix_has_error()})
 
   r<-1:3
   p<-reactive({dgm$params()})
@@ -116,10 +117,37 @@ mod_infinite_server <- function(id,dgm){
 
 
   T_model<-reactive({beta()})#qr.solve(QX_f(), Xy())
-  OVB_model<-reactive({qr.solve(QX_r(), Xy()[r])})
-  ME_model<-reactive({qr.solve(Qst_f(), Xy())})
-  ME_OVB_model<-reactive({qr.solve(Qst_r(), Xy()[r])})
+  # OVB_model<-reactive({
+  #   req(!matrix_has_error())
+  #   qr.solve(QX_r(), Xy()[r])})
+  # ME_model<-reactive({
+  #   req(!matrix_has_error())
+  #   qr.solve(Qst_f(), Xy())})
+  # ME_OVB_model<-reactive({
+  #   req(!matrix_has_error())
+  #   qr.solve(Qst_r(), Xy()[r])})
 
+
+  ME_model <- reactive({
+    req(!matrix_has_error())
+    res <- tryCatch(qr.solve(Qst_f(), Xy()), error = function(e) NULL)
+    req(!is.null(res))
+    res
+  })
+
+  ME_OVB_model <- reactive({
+    req(!matrix_has_error())
+    res <- tryCatch(qr.solve(Qst_r(), Xy()[r]), error = function(e) NULL)
+    req(!is.null(res))
+    res
+  })
+
+  OVB_model <- reactive({
+    req(!matrix_has_error())
+    res <- tryCatch(qr.solve(QX_r(), Xy()[r]), error = function(e) NULL)
+    req(!is.null(res))
+    res
+  })
 
 # coefficent table --------------------------------------------------------
 

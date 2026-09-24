@@ -283,24 +283,67 @@ mod_dgm_server <- function(id){
       TRUE
     })
 
+    # Error: near-singular moment matrix -----------------------------------
+    M1_error <- reactiveVal(FALSE)
+    M2_error <- reactiveVal(FALSE)
+    matrix_has_error <- reactive({ M1_error() || M2_error() })
+    observe({print(c(M1_error(), M2_error(),matrix_has_error() ))})
+
+    observe({
+      inputs_ok()
+      req(input$var_x > 0, input$var_z > 0)
+      req(abs(input$cov_xz) <= sqrt(input$var_x * input$var_z))
+
+
+      if (matrix_has_error()) {
+        showNotification(
+          "Means are extreme relative to the variances, making the moment matrix numerically unstable. Try smaller means or larger variances.",
+          id = "mean_cond_error", type = "error", duration = NULL
+        )
+      } else {
+        removeNotification(id = "mean_cond_error")
+      }
+    })
 
 
     QXs<-reactive({
       inputs_ok()
       req(input$var_x > 0&&input$var_z>0)
       req(abs(input$cov_xz) <= sqrt(input$var_x * input$var_z))
-      QX(mean_x=input$mean_x, mean_z=input$mean_z,
+      M<-QX(mean_x=input$mean_x, mean_z=input$mean_z,
        var_x = input$var_x, var_z = input$var_z, cov_xz = input$cov_xz)
-    })
+      result <- tryCatch({
+        qr.solve(M)
+        M
+      }, error = function(e) NULL)
+
+      M1_error(is.null(result))
+      result
+      })
+
+    # QXs<-reactive({
+    #   inputs_ok()
+    #   req(input$var_x > 0&&input$var_z>0)
+    #   req(abs(input$cov_xz) <= sqrt(input$var_x * input$var_z))
+    #   QX(mean_x=input$mean_x, mean_z=input$mean_z,
+    #         var_x = input$var_x, var_z = input$var_z, cov_xz = input$cov_xz)
+    # })
 
     Xy<-reactive({E_Xy(beta=beta(), signal_matrix = QXs())})
-    # observe({print(Xy())})
-    # observe({print(Xy()[1:3])})
+
+
     QDs<-reactive({
       inputs_ok()
       req(input$rel_x>0&&input$rel_z>0)
-      QD(var_error_x = v_ex(),var_error_z = v_ez(), var_x = input$var_x , var_z = input$var_z, mean_x = input$mean_x,
+      M<-QD(var_error_x = v_ex(),var_error_z = v_ez(), var_x = input$var_x , var_z = input$var_z, mean_x = input$mean_x,
          mean_z = input$mean_z)
+      result <- tryCatch({
+        qr.solve(M+QXs())
+        M
+      }, error = function(e) NULL)
+
+      M2_error(is.null(result))
+      result
     })
 
 
@@ -314,13 +357,6 @@ beta_r<-reactive({
   c(b0,b1,b2) })
   # test --------------------------------------------------------------------
 
-    # output$testOUT<-renderPrint({
-    #   list(
-    #     betas=beta(),
-    #     QX=QXs(),
-    #     QD=QDs()
-    #   )
-    # })
 
     # return parameters for other modules -------------------------------------
     params <- reactive({
@@ -348,7 +384,9 @@ beta_r<-reactive({
       Xy=Xy,
       v_ey=v_ey,
       v_ex=v_ex,
-      v_ez=v_ez)
+      v_ez=v_ez,
+      inputs_ok=inputs_ok,
+      matrix_has_error=matrix_has_error)
     )
 
     })

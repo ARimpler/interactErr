@@ -19,7 +19,7 @@ mod_uncertainty_ui <- function(id) {
           accordion_panel("Assumptions", HTML(ASSUMPTIONS_sign_flips))
       )),
     h3("Sign Flips"),
-    card_header( "Predefined Samplesizes"),
+    #card_header( "Predefined Samplesizes"),
     card(
       id="predef",
       accordion(open = FALSE,
@@ -27,21 +27,46 @@ mod_uncertainty_ui <- function(id) {
                   col_widths = c(8,4),
                   div(accordion_panel("Instructions", HTML(INS_flips)),
                       accordion_panel("Background Information", HTML(BACKINF_flips))),
-                  div(
-                    card_header("Data Bounds"),
-                    card(id="settings",
-                         div(textOutput(ns("inf_flip_location"))),
-                         div(HTML("After you have defined the bounds of your data click `Run' to compute the probability and location of sign flips within your specified
-               data range for finite samples.")),
-                         div(input_task_button(ns("run"), "Run")),
-                         layout_columns(
-                           col_widths=c(2,2,2,2),
-                           div(numericInput(ns("lower_x"), "Lower Bound x", value = 2)),
-                           div(numericInput(ns("upper_x"), "Upper Bound x", value = 8)),
-                           div(numericInput(ns("lower_z"), "Lower Bound z", value = 1)),
-                           div(numericInput(ns("upper_z"), "Upper Bound z", value = 6))
-                         ))
-                  )
+               #    div(
+               #      card_header("Data Bounds"),
+               #      card(id="settings",
+               #           div(textOutput(ns("inf_flip_location"))),
+               #           div(HTML("After you have defined the bounds of your data click `Run' to compute the probability and location of sign flips within your specified
+               # data range for finite samples.")),
+               #           div(input_task_button(ns("run"), "Run")),
+               #           layout_columns(
+               #             col_widths=c(2,2,2,2),
+               #             div(numericInput(ns("lower_x"), "Lower Bound x", value = 2)),
+               #             div(numericInput(ns("upper_x"), "Upper Bound x", value = 8)),
+               #             div(numericInput(ns("lower_z"), "Lower Bound z", value = 1)),
+               #             div(numericInput(ns("upper_z"), "Upper Bound z", value = 6))
+               #           ))
+               #    )
+               div(
+                 h6("Data Bounds"),
+                 div(textOutput(ns("inf_flip_location"))),
+
+                 tags$table(
+                   class = "table table-striped table-bordered w-auto",
+                   tags$thead(tags$tr(
+                     tags$th(""), tags$th("Lower"), tags$th("Upper"))),
+                   tags$tbody(
+                     tags$tr(
+                       tags$td("x"),
+                       tags$td(numericInput(ns("lower_x"), NULL, value = 2, width = "80px")),
+                       tags$td(numericInput(ns("upper_x"),  NULL, value = 8, width = "80px"))
+                     ),
+                     tags$tr(
+                       tags$td("z"),
+                       tags$td(numericInput(ns("lower_z"), NULL, value = 1, width = "80px")),
+                       tags$td(numericInput(ns("upper_z"),  NULL, value = 6, width = "80px"))
+                       )
+                   )
+                 ),
+                div(HTML("After you have defined the bounds of your data click `Run' to compute the probability and location of sign flips within your specified
+                 data range for finite samples.")),
+                div(input_task_button(ns("run"), "Run"))
+               )
                 )
 
       ),
@@ -112,7 +137,7 @@ output$inf_flip_location<-renderText({
 # generic draws -----------------------------------------------------------
 
 gener_draws <- eventReactive(input$run, {
-  ns <- c(100, 250, 500, 1000, 2000)
+  ns <- c(100, 250, 500, 1000)
   do.call(rbind, lapply(ns, function(n) {
     QXX_inv <- solve(QXX() * n)
     Vcov    <- sigma() * QXX_inv
@@ -145,14 +170,17 @@ output$flip_table_by_n<-renderUI({
   gt::gt(s) |>
     gt::cols_label(x_prop="% Flips in x", z_prop ="% Flips in z")
 })
-observe({print(max(gener_draws()$x_critical))})
-
+z_range <-reactive({input$upper_z - input$lower_z})
+x_range <-reactive({input$upper_x - input$lower_x})
+#observe({print(max(gener_draws()$x_critical))})
 output$flip_b1_by_n <- renderPlot({
   ggplot(gener_draws(), ggplot2::aes(x = z_critical)) +
     geom_histogram(bins = 200,
                    aes(fill = after_stat(x >= input$lower_z & x <= input$upper_z)),
     ) +
-    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +
+    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"),
+                      guide = "none") +
+    coord_cartesian(c(input$lower_z-z_range()*0.1, input$upper_z+z_range()*0.1))+
     geom_vline(xintercept = c(input$lower_z, input$upper_z),
                color = "black", linetype = 1, linewidth = 0.8) +
     geom_vline(xintercept = c(input$lower_z, input$upper_z),
@@ -169,6 +197,7 @@ output$flip_b2_by_n <- renderPlot({
                    aes(fill = after_stat(x >= input$lower_x & x <= input$upper_x)),
     ) +
     scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +
+    xlim(c(input$lower_x-x_range()*0.1, input$upper_x+x_range()*0.1))+
     geom_vline(xintercept = c(input$lower_x, input$upper_x),
                color = "black", linetype = 1, linewidth = 0.8) +
     geom_vline(xintercept = c(input$lower_x, input$upper_x),
