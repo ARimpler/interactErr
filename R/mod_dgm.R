@@ -207,6 +207,9 @@ mod_dgm_server <- function(id){
         noise_y <- signal_var_y * (1 - R2) / R2
         noise_y
     })
+    observe({
+      print(v_ey())
+    })
 
     beta<-reactive({
       inputs_ok()

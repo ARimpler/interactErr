@@ -11,17 +11,8 @@ mod_surface_vis_ui <- function(id) {
   ns <- NS(id)
   tagList(fluidRow(
     h3("Regression Surface Visualization"),
-    div(
-      checkboxInput(ns("show_finite_var"), "Show sampling uncertainty", value = FALSE),
-      conditionalPanel(
-        condition = sprintf("input['%s']", ns("show_finite_var")),
-        selectInput(ns("unc_n"), "Sample size (n)",
-                    choices = c(25, 50, 100, 200, 500, 1000), selected = 100),
-        numericInput(ns("ci_level"), "CI level", value = 0.95, min = 0.5, max = 0.999, step = 0.01)
-      )
-    ),
     layout_columns(
-      col_widths = c(2,3,3,3),
+      col_widths = c(2,3,3,1,3),
       card(title="Plot Controls",
            height="605px",
            layout_columns(
@@ -43,6 +34,15 @@ mod_surface_vis_ui <- function(id) {
       card(title = "Applied model (infinite sample)", height = "605px", full_screen = TRUE,
            plotlyOutput(ns("applied_surface"), height = "100%"),
            textOutput(ns("model_equation_applied"))),
+      div(
+        checkboxInput(ns("show_finite_var"), "Show sampling uncertainty", value = FALSE),
+        conditionalPanel(
+          condition = sprintf("input['%s']", ns("show_finite_var")),
+          selectInput(ns("unc_n"), "Sample size (n)",
+                      choices = c(25, 50, 100, 250, 500, 1000), selected = 100),
+          numericInput(ns("ci_level"), "CI level", value = 0.95, min = 0.5, max = 0.999, step = 0.01)
+        )
+      ),
       card(title = "Estimated model (Simulated samples)", height = "605px", full_screen = TRUE,
            plotlyOutput(ns("est_surface"), height = "100%"),
            textOutput(ns("model_equation_estimated")))
