@@ -285,8 +285,10 @@ sim_results <- eventReactive(input$run, {
       Xf_st<-cbind(1,x+ex,z+ez,(x+ex)*(z+ez))
       QXX<-crossprod(Xf,Xf)
       QXX_st<-crossprod(Xf_st, Xf_st)
-      b_r<-qr.solve(QXX_st[r,r])%*%(QXX%*%beta)[r]
-      b_f<-qr.solve(QXX_st)%*%(QXX%*%beta)
+      # b_r<-qr.solve(QXX_st[r,r])%*%(QXX%*%beta)[r]
+      # b_f<-qr.solve(QXX_st)%*%(QXX%*%beta)
+      b_r <- qr.solve(QXX_st[r,r], crossprod(Xf_st[,r], y))
+      b_f <- qr.solve(QXX_st,      crossprod(Xf_st,     y))
       b_sim_r[i,]<-t(b_r)
       b_sim_f[i,]<-t(b_f)
 
