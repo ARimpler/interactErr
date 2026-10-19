@@ -3,7 +3,7 @@ intro <- "<h3>Welcome</h3>
 <p>This app helps you study how two regression models behave when a <strong>true interaction effect</strong>
 is present in the data generating process and predictors are subject to <strong>classical measurement error</strong>.
 The <em>full model</em> includes the interaction term; the <em>reduced model</em> omits it. Both are common analyst
-choices — but under measurement error, their behavior relative to each other is often counterintuitive, and this
+choices &mdash; but under measurement error, their behavior relative to each other is often counterintuitive, and this
 app is built to make the behavior of both models explorable before you collect data.<br>
   The computations are based on the derivations in this
 <a href=https://doi.org/10.31234/osf.io/s47xz_v2>preprint, which provides the full technical derivations</a>.
@@ -59,11 +59,11 @@ whether the two models imply qualitatively different conclusions.</li>
   <strong>simplified model</strong>, also for the <strong>expected observed</strong> data.
   <li>Choosing <strong>Evaluation Points</strong> of the model, this is implied by re-parameteraizations such
   as mean centering and gives a simple tool to <strong>compare raw vs mean-centered models</strong>
-  <li><strong>Residual-based metrics</strong>, R² and RMSE/MSE at the population level and, via
+  <li><strong>Residual-based metrics</strong>, R&sup2; and RMSE/MSE at the population level and, via
 simulation, at realistic sample sizes.</li>
   <li><strong>Variability of these metrics across samples</strong>, indicating how reliably the two models can be
 told apart in practice.</li>
-  <li><strong>Sign-flip probabilities</strong> — how likely an estimated effect is to change direction within your
+  <li><strong>Sign-flip probabilities</strong> &mdash; how likely an estimated effect is to change direction within your
 specified, realistic data range.</li>
   </ul>
 "
@@ -73,7 +73,7 @@ specified, realistic data range.</li>
 
 INS_descriptives <- "
 <p>Before using the app, specify the descriptive statistics that define your population of interest.
-These describe the <strong>true</strong> predictor variables — i.e., the values you would observe if there
+These describe the <strong>true</strong> predictor variables &mdash; i.e., the values you would observe if there
 were no measurement error. All computations in the app build on this specification.</p>
 The required statistics are:
 <ul>
@@ -83,7 +83,7 @@ The required statistics are:
 <li> The covariance between the predictor variables </li>
 </ul>
 <p>Note that the covariance is constrained by the two variances (it cannot exceed
-&radic;(Var(X)&middot;Var(Z)) in absolute value) and the variances and reliability cannot be zero—
+&radic;(Var(X)&middot;Var(Z)) in absolute value) and the variances and reliability cannot be zero&mdash;
 the app will warn you if this is violated. </p>
 <p>The descriptive statistics are best obtained through validation studies, previous published research or pilot studies. </p>
 "
@@ -91,7 +91,7 @@ the app will warn you if this is violated. </p>
 
 INS_effects <- "
 <p>Next, specify the assumed true effects. These are the regression weights you believe would be recovered
-in an infinite sample, if predictors were measured without error and the model — including the interaction —
+in an infinite sample, if predictors were measured without error and the model &mdash; including the interaction &mdash;
 were correctly specified.</p>
 
 <p>As discussed in the accompanying preprint, empirically estimated effects are often fragile, particularly for
@@ -99,14 +99,14 @@ interaction terms. Nonetheless prior empirical findings remain the best availabl
 has been much discussion and literature on how to best establish the effects in the context of power analyses and
 smallest effect size of interest, which also require pre-defined effect sizes.</p>
 
-<p>The <strong>true R²</strong> reflects the variance explained by the three predictors (both main effects and
+<p>The <strong>true R&sup2;</strong> reflects the variance explained by the three predictors (both main effects and
 the interaction) under three conditions:</p>
 <ul>
 <li>no measurement error is present in the predictors,</li>
 <li>no relevant variables correlated with the predictors have been omitted, and</li>
 <li>the remaining unexplained variance is independent of the predictors, the outcome, and any measurement error.</li>
 </ul>
-<p>In other words, true R² represents the ceiling on explained variance from a correctly specified, error-free
+<p>In other words, true R&sup2; represents the ceiling on explained variance from a correctly specified, error-free
 model. Any gap between this and what you would observe in practice is attributable to measurement error and/or
 model misspecification, both of which the app lets you explore.</p>
 </p>"
@@ -130,8 +130,8 @@ the green surface shows the model that excludes it (reduced model).</p>
 broadly, the more the plane curves within the specified data range, the stronger the underlying interaction
 effect is within that range.</p>
 <p>The tangent lines let you inspect this more precisely: they show the simple slope at a chosen evaluation
-point, which is useful for interpreting effects at meaningful thresholds — for example, a clinical cut-off score
-— rather than only at the variables means or sero points.</p>"
+point, which is useful for interpreting effects at meaningful thresholds &mdash; for example, a clinical cut-off score
+&mdash; rather than only at the variables means or sero points.</p>"
 
 ASSUMPTIONS_3d_vis <- "<p>This visualization plots the regression surfaces implied by the parameters
 specified elsewhere in the app. Depending on which tab you are viewing this from:</p>
@@ -139,7 +139,7 @@ specified elsewhere in the app. Depending on which tab you are viewing this from
 <li>On <strong>Data Generating Model</strong>, the surfaces reflect the <strong>true</strong>, error-free
 parameters you specified.</li>
 <li>On <strong>Population Level</strong>, the surfaces reflect the parameters as they would be
-<strong>estimated on average given measurement error</strong> — i.e., observed-scale surfaces,
+<strong>estimated on average given measurement error</strong> &mdash; i.e., observed-scale surfaces,
 not the true ones.</li>
 </ul>
 <p>If viewed on <strong>Population Level</strong> the  same assumptions underlying the computations apply.</p>"
@@ -199,7 +199,7 @@ first table minus the true effect (row 1).</p>"
 
 BACKINF_infinite <- "
 <p>Measurement error in predictors and omitting a true interaction effect are each
-well studied in isolation — their consequences for regression weights and prediction accuracy are individually
+well studied in isolation &mdash; their consequences for regression weights and prediction accuracy are individually
 well understood. What is less studied is what happens when <strong>both occur together</strong>, which is the
 realistic situation in most applied settings. One of the consequences form both modeling challenges is
 that regression estimates become biased.</p>
@@ -207,7 +207,7 @@ that regression estimates become biased.</p>
 consequential is when a regression weight's <strong>sign flips</strong> relative to the true effect. This
 means the model would lead to a qualitatively different conclusion depending on which specification was used.</p>
 <p>These two sources of bias do not simply add up. Measurement error alone leaves means untouched, but the bias
-from omitting an interaction effect depends directly on where the predictors are centered — the two forms of
+from omitting an interaction effect depends directly on where the predictors are centered &mdash; the two forms of
 bias interact in ways that are difficult to anticipate from either source alone. This page lets you see the
 combined effect directly, for your specified true parameters.</p>
 "
@@ -224,29 +224,29 @@ For the computations on this page we make the following assumptions:
 </p>"
 
 
-INS_accuracy_pop <- "<p>The table on the left shows the numeric values of R², MSE, and RMSE for each model,
+INS_accuracy_pop <- "<p>The table on the left shows the numeric values of R&sup2;, MSE, and RMSE for each model,
 under measurement error, at an infinite sample size.</p>
-<p>The first heatmap shows the difference in population R² between the full and misspecified model as the
+<p>The first heatmap shows the difference in population R&sup2; between the full and misspecified model as the
 reliability of each predictor varies from 0.1 to 1. The second heatmap shows the same comparison for MSE and the
 third for RMSE.</p>"
 
-BACKINF_accuracy_pop <- "<p>R² is not a direct measure of prediction accuracy, but it is closely related: it
+BACKINF_accuracy_pop <- "<p>R&sup2; is not a direct measure of prediction accuracy, but it is closely related: it
 reflects prediction accuracy relative to a model that only predicts the outcome's mean. On a finite sample,
-sample R² is known to overestimate the population R², which is why procedures like cross-validation are used
-to approximate the population value more precisely. The values shown here are the actual population R² —
+sample R&sup2; is known to overestimate the population R&sup2;, which is why procedures like cross-validation are used
+to approximate the population value more precisely. The values shown here are the actual population R&sup2; &mdash;
 i.e., what such procedures aim to estimate, computed directly rather than approximated.</p>
-<p>We report MSE, RMSE (direct, outcome-scale dependend measures of prediction accuracy) and R²
+<p>We report MSE, RMSE (direct, outcome-scale dependend measures of prediction accuracy) and R&sup2;
 (a relative, scale-free measure), since both are standard, widely understood output for linear regression in both explanatory and
 predictive contexts.</p>
 <p>All metrics on this page reflect infinite-sample values; sample-based estimates of these same metrics are
 generally biased at finite sample sizes, which can be explored on the Sample Level tab.</p>
 <p>The reliability parameters in the heatmaps are varied because obtaining accurate reliability estimates is
-often difficult in the social and behavioral sciences. Typically, the largest R²/RMSE difference between models
+often difficult in the social and behavioral sciences. Typically, the largest R&sup2;/RMSE difference between models
 occurs at high reliability (top-right of each heatmap) and the smallest at low reliability (bottom-left).</p>
-<p>A small population R² (or RMSE) difference means the two models are difficult to distinguish empirically —
+<p>A small population R&sup2; (or RMSE) difference means the two models are difficult to distinguish empirically &mdash;
 but this does <strong>not</strong> guarantee they are not qualitatively different (see the regression weights
 and bias tables above). Standardizing RMSE for comparability across different data-generating processes would
-simply yield a transformation of R², so we report both in their natural, unstandardized form.</p>"
+simply yield a transformation of R&sup2;, so we report both in their natural, unstandardized form.</p>"
 
 # Finite ------------------------------------------------------------------
 INS_finite <- "<p>Specify a random seed (for reproducibility note your seed down as the
@@ -255,7 +255,7 @@ click <strong>Run Simulation</strong>. The app will simulate data at several sam
 data-generating process, fit both the full and reduced model to each simulated sample, and summarize the
 resulting estimates and fit statistics.</p>
 <p>Optionally, enable <strong>skewed predictors</strong> to explore what happens when the true predictors are
-not normally distributed (see Assumptions) — this changes only the simulated data, not the population-level
+not normally distributed (see Assumptions) &mdash; this changes only the simulated data, not the population-level
 values shown elsewhere in the app.</p>
 <p> Importantly, for skewed predictors some of the patterns do not need to match
 the previously shown values. </p>"
@@ -264,7 +264,7 @@ ASSUMPTIONS_finite <- "<p>The computations on this page rely on the following:</
 <ul>
 <li>The effects specified in the <strong>Data Generating Model</strong> tab are the true effects.</li>
 <li>Errors in predictors are <strong>classical measurement error</strong>.</li>
-<li>The unexplained variance specified via true R² is independent of the predictors, the outcome, and the
+<li>The unexplained variance specified via true R&sup2; is independent of the predictors, the outcome, and the
 measurement error.</li>
 <li>By default, predictors are simulated as jointly normal, matching the assumption used in the Population
 Level tab. Enabling <strong>skewed predictors</strong> allows to use simulate skewed
@@ -278,7 +278,7 @@ which is not the case for the simplified model, representing many software defau
 # <p>So far, we have considered different metrics on a population level Meaning,
 # how models behave if we could observe an infinite number of data points drawn
 # from the true data-generating process.
-# In that case, quantities such as R², bias, or MSE represent their expected or
+# In that case, quantities such as R&sup2;, bias, or MSE represent their expected or
 # long-run values. </p>
 # <p>In reality, however, we only have samples, so finite subsets of the population.
 # Many of the metrics that we typically estimate form samples, are <em>themselves
@@ -286,28 +286,28 @@ which is not the case for the simplified model, representing many software defau
 # sample estimates are corrected for example for
 # degress of freddom or sample size. These correction methods are used, to get more
 # precise or unbiased estimates for the population. </p>
-# <p>A well known example is the sample R². If we apply multiple linear regression
-# models with differing numbers of predictor variables and compute R² for each model,
-# R² will always be larger for the more complex model.
-# However, this does not mean that the population R² for the more complex model is
-# always larger. To get a better estimate for the population R², we can take the
+# <p>A well known example is the sample R&sup2;. If we apply multiple linear regression
+# models with differing numbers of predictor variables and compute R&sup2; for each model,
+# R&sup2; will always be larger for the more complex model.
+# However, this does not mean that the population R&sup2; for the more complex model is
+# always larger. To get a better estimate for the population R&sup2;, we can take the
 # degress of freedom of the model, as well as the sample size into account.
-# If we take both of them into account we end up with R² adjusted. Because R²
+# If we take both of them into account we end up with R&sup2; adjusted. Because R&sup2;
 # adjusted takes the degress of freedom (number of predictors) of the regression
-# model into account, and the number of predictors differ between the models R²
+# model into account, and the number of predictors differ between the models R&sup2;
 # adjusted can be
 # larger for the less complex model.
 # If we apply multiple linear regression models with different numbers of predictor
-# variables and compute R² for each model in the sample,
-# the more complex model will always have a higher R² (even if just in the 10th digit).
+# variables and compute R&sup2; for each model in the sample,
+# the more complex model will always have a higher R&sup2; (even if just in the 10th digit).
 # However, this does not necessarily mean that this model would also achieve a
-# larger R² in the <em>population</em>.
-# To better approximate the population R², we can adjust for the model’s degrees of
+# larger R&sup2; in the <em>population</em>.
+# To better approximate the population R&sup2;, we can adjust for the model&rsquo;s degrees of
 # freedom and the sample size,
-# leading to the <strong>adjusted R²</strong>.
-# Because adjusted R² takes the degrees of freedom of the model into account
+# leading to the <strong>adjusted R&sup2;</strong>.
+# Because adjusted R&sup2; takes the degrees of freedom of the model into account
 # (penalizing additional predictors), it can be larger for a simpler model when
-# variables are added to a model, without increasing R² substantially.</p>
+# variables are added to a model, without increasing R&sup2; substantially.</p>
 #
 # Due to the differing behavior of some metrics on sample and population level we
 # might sometimes provide different, but related, metrics for the sample expectations.
@@ -318,25 +318,25 @@ which is not the case for the simplified model, representing many software defau
 BACKINF_finite <- "<p>So far, we have considered metrics at the population level, meaning how models behave
 if we could observe an infinite number of data points drawn from the true data-generating process. </p>
 <p>In reality, we only ever observe finite samples. Many metrics estimated from a sample are themselves
-<em>biased estimates of the population metric</em> — which is why estimators are often corrected for degrees
+<em>biased estimates of the population metric</em> &mdash; which is why estimators are often corrected for degrees
 of freedom or sample size, to get closer to the population value.</p>
-<p>A well-known example is sample R². If you fit regression models with differing numbers of predictors to
-the same sample, R² will always be at least as large for the more complex model as for a simpler model
-— even if only in the 10th decimal.
-This does not mean the more complex model actually has a larger <em>population</em> R². To
+<p>A well-known example is sample R&sup2;. If you fit regression models with differing numbers of predictors to
+the same sample, R&sup2; will always be at least as large for the more complex model as for a simpler model
+&mdash; even if only in the 10th decimal.
+This does not mean the more complex model actually has a larger <em>population</em> R&sup2;. To
 better approximate the population value, we can adjust for the model's degrees of freedom and the
-sample size, giving the <strong>adjusted R²</strong>. Because it penalizes additional predictors,
-adjusted R² can be larger for the simpler model when adding predictors does not
+sample size, giving the <strong>adjusted R&sup2;</strong>. Because it penalizes additional predictors,
+adjusted R&sup2; can be larger for the simpler model when adding predictors does not
 meaningfully improve fit.</p>
 <p>Because some metrics behave differently at the sample versus population level,
-this tab sometimes reports a related but distinct metric from the one shown on the Population Level tab (e.g., adjusted R² instead of R²,
+this tab sometimes reports a related but distinct metric from the one shown on the Population Level tab (e.g., adjusted R&sup2; instead of R&sup2;,
 and MSE are adjusted to account for finite samples).</p>"
 
 ASSUMPTIONS_finite <- "<p>The computations on this page rely on the following:</p>
 <ul>
 <li>The effects specified in the <strong>Data Generating Model</strong> tab are the true effects.</li>
 <li>Errors in predictors are <strong>classical measurement error</strong>.</li>
-<li>The unexplained variance specified via true R² is independent of the predictors, the outcome, and the
+<li>The unexplained variance specified via true R&sup2; is independent of the predictors, the outcome, and the
 measurement error.</li>
 <li>By default, predictors are simulated as jointly normal, matching the assumption used in the Population
 Level tab. Enabling <strong>skewed predictors</strong> allows to use simulate skewed
@@ -351,7 +351,7 @@ and the resulting standard deviation of the simulated regression estimates
 for both models, across several sample sizes.
 </p>
 <p>If normally distributed predictors are used the exprected regression weights
-match those shown on the Population Level tab when many iterations are used —
+match those shown on the Population Level tab when many iterations are used &mdash;
 only their precision changes with sample size.</p>"
 
 BACKINF_est_precision_sample <- "<p>Larger samples produce more precise (lower standard error)
@@ -367,7 +367,7 @@ BACKINF_fit_sample<-"
 <p>
 Distinguishing regression models statistically typically relies on comparing their
 residuals. Common approaches include AIC, BIC (which penalize model complexity differently), or a direct
-statistical comparison of R². The closer the expected sample R² of the two models, the harder it is to tell
+statistical comparison of R&sup2;. The closer the expected sample R&sup2; of the two models, the harder it is to tell
 them apart statistically, even if the underlying regression surfaces differ substantially.
 </p>
 "
@@ -379,7 +379,7 @@ INS_sign_flips <- "<p>In this tab it is possibel to estimates how likely a <stro
 a specified data range, i.e., how often a predictor's simple slope has the opposite sign from the average effect
 implied by a main-effects-only model.</p>
 <p>Enter the plausible lower and upper bounds for each predictor and click <strong>Run</strong>. These bounds
-can often be derived directly from your measurement instrument — for example, a 7-point Likert scale composed
+can often be derived directly from your measurement instrument &mdash; for example, a 7-point Likert scale composed
 of 5 items has a minimum possible sum score of 5 (5&times;1) and a maximum of 35 (5&times;7).</p>
 <p>Note that the sign-flip risk for predictor X depends on the specified range of predictor Z, and vice versa.</p>"
 # backinf_uncertainty<-"
@@ -397,7 +397,7 @@ of 5 items has a minimum possible sum score of 5 (5&times;1) and a maximum of 35
 # </p>"
 
 
-BACKINF_sign_flips <- "<p>An interaction effect implies a regression surface with a saddle point — but this
+BACKINF_sign_flips <- "<p>An interaction effect implies a regression surface with a saddle point &mdash; but this
 only guarantees a sign flip somewhere across the <em>entire</em> real-valued range of both predictors. Empirical,
 bounded data (e.g., by a Likert scale) may never actually reach that point. The key practical question is whether
 the flip falls <strong>within a realistic data range</strong>, not whether one exists mathematically.</p>
@@ -418,7 +418,7 @@ ASSUMPTIONS_sign_flips <- "<p>The computations on this page rely on the followin
 t-distribution based on the asymptotic covariance of the OLS estimator), rather than obtained via simulation.
 This is a default assumption in OLS regression, but can behave erratically at small sample sizes: since the flip location is a
 <em>ratio</em> of two estimated coefficients, its distribution can become heavy-tailed or unstable if the
-interaction coefficient's sampling distribution places meaningful probability near zero — most likely at
+interaction coefficient's sampling distribution places meaningful probability near zero &mdash; most likely at
 small planned sample sizes or small true interaction effects.</li>
 </ul>"
 

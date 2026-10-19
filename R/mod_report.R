@@ -8,6 +8,7 @@
 #'
 #' @importFrom shiny NS tagList
 #' @import tinytex
+#' @import rmarkdown
 mod_report_ui <- function(id) {
   ns <- NS(id)
   tagList(

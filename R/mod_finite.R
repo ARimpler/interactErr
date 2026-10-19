@@ -13,6 +13,8 @@
 #' @importFrom bslib  input_task_button
 #' @import ggplot2 viridis
 #' @importFrom sn cp2dp rmsn
+#' @importFrom stats rnorm sd aggregate
+#' @importFrom rlang .data
 mod_finite_ui <- function(id) {
   ns <- NS(id)
   tagList(
@@ -28,52 +30,6 @@ mod_finite_ui <- function(id) {
          )
       )
     ),
-  # div(
-  #     h3("Simulation Regression Weights"),
-  #     card_header("Weights"),
-  #     card(id="results_weight",
-  #          accordion(
-  #            open=FALSE,
-  #            layout_columns(
-  #              col_widths = c(8,4),
-  #              div(
-  #              accordion_panel("Instructions", HTML(INS_est_precision_sample)),
-  #              accordion_panel("Background Information", HTML(BACKINF_est_precision_sample))
-  #              ),
-  #              div(
-  #                layout_columns(
-  #                  col_widths = c(12,12,12),
-  #                  div(
-  #                    numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
-  #                  div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
-  #                  #actionButton(ns("run"), "Run Simulation", class = "btn-primary")#,
-  #                  div(
-  #                    checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
-  #                    conditionalPanel(
-  #                      condition = sprintf("input['%s']", ns("use_skew")),
-  #                      numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
-  #                      numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
-  #                    )
-  #                  ),
-  #                  div(input_task_button(ns("run"), "Run Simulation")
-  #                      #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
-  #                  )
-  #                )
-  #              )
-  #              )
-  #          ),
-  #       layout_columns(
-  #         col_widths = c(5,5,2),
-  #         div(
-  #           h6("Regression Estimates"),
-  #           plotOutput(ns("plot_estimates"), height = "500px")
-  #         ),
-  #         div(
-  #           h6("Summary Table"),
-  #           uiOutput(ns("simulation_estimate_summ"))
-  #         )
-  #       )
-  #       )),
   div(
       h3("Results Fit and Differentiatability"),
       card_header("Fit"),
@@ -116,12 +72,11 @@ mod_finite_ui_sim_settings<-function(id){
                        checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
                        conditionalPanel(
                          condition = sprintf("input['%s']", ns("use_skew")),
-                         numericInput(ns("skew_x"), "Skewness (x, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05),
-                         numericInput(ns("skew_z"), "Skewness (z, γ1)", value = 0, min = -0.99, max = 0.99, step = 0.05)
+                         numericInput(ns("skew_x"), "Skewness (x, \u03B31)", value = 0, min = -0.99, max = 0.99, step = 0.05),
+                         numericInput(ns("skew_z"), "Skewness (z, \u03B31)", value = 0, min = -0.99, max = 0.99, step = 0.05)
                        )
                      ),
                      div(input_task_button(ns("run"), "Run Simulation")
-                         #numericInput(ns("n"), "Samplesizes", value = 1, min = 0)
                      )
                    )
                  ),
@@ -132,13 +87,7 @@ mod_finite_ui_sim_settings<-function(id){
   )
 }
 
-#' #' @noRd
-#' mod_finite_ui_predictor_preview <- function(id) {
-#'   ns <- NS(id)
-#'   tagList(
-#'     div(plotOutput(ns("predictor_preview"), height = "220px"))
-#'   )
-#' }
+
 #' @noRd
 mod_finite_ui_estimate_summary <- function(id) {
   ns <- NS(id)
@@ -207,9 +156,9 @@ mod_finite_server <- function(id, dgm, df_estimates){
 
     output$predictor_preview <- renderPlot({
       df <- preview_sample()
-      df_long <- tidyr::pivot_longer(df, cols = c(x, z), names_to = "predictor", values_to = "value")
+     df_long <- tidyr::pivot_longer(df, cols = c(x, z), names_to = "predictor", values_to = "value")
 
-      ggplot(df_long, aes(x = value, fill = predictor, color = predictor)) +
+      ggplot(df_long, aes(x = .data$value, fill = .data$predictor, color = .data$predictor)) +
         geom_density(alpha = 0.3) +
         scale_fill_manual(values = c(x = "#440154", z = "#addc30")) +
         scale_color_manual(values = c(x = "#440154", z = "#addc30")) +
@@ -224,7 +173,7 @@ mod_finite_server <- function(id, dgm, df_estimates){
     ovb<-reactive({df_estimates()[3,]})
 
     iterations<- reactive({
-      min(max(input$iter, 1), 5000)  # clamp silently to 5000
+      min(max(input$iter, 1), 5000)  # clamp to 5000
     })
 
 # simulation loop ---------------------------------------------------------
@@ -358,7 +307,7 @@ sim_results <- eventReactive(input$run, {
       df_b <- rbind(df_r, df_f)
 
       df_b_long <- tidyr::pivot_longer(
-        df_b, cols = c(b0, b1, b2, b3),
+        df_b, cols = c(.data$b0, .data$b1, .data$b2, .data$b3),
         names_to = "parameter", values_to = "estimate"
       )
       df_b_long <- df_b_long[!(df_b_long$model == "Reduced" & df_b_long$parameter == "b3"), ]
@@ -373,7 +322,7 @@ sim_results <- eventReactive(input$run, {
                    d_aic=fit_sim[,7], d_bic=fit_sim[,8], d_r2adj=fit_sim[,9])
       }))
       df_fit_long<-tidyr::pivot_longer(
-        df_fit, cols = c(d_aic, d_bic, d_r2adj),
+        df_fit, cols = c(.data$d_aic, .data$d_bic, .data$d_r2adj),
         names_to = "parameter", values_to = "estimate"
       )
       return(list(df_b=df_b, df_b_long=df_b_long,df_fit=df_fit, df_fit_long=df_fit_long))
@@ -391,17 +340,17 @@ sim_results <- eventReactive(input$run, {
       df_ovb  <- data.frame(parameter = c("b0","b1","b2"),
                             ovb_val   = c(ovb()$b0, ovb()$b1, ovb()$b2))
 
-      ggplot(df_long, aes(x = estimate, fill = model, color = model)) +
+      ggplot(df_long, aes(x = .data$estimate, fill = .data$model, color = .data$model)) +
         geom_density(alpha = 0.3) +
-        facet_grid(n ~ parameter, scales = "free") +
-        geom_vline(data = df_true, aes(xintercept = true_val),
+        facet_grid(.data$n ~ .data$parameter, scales = "free") +
+        geom_vline(data = df_true, aes(xintercept = .data$true_val),
                    color = "#440154", linetype = "solid") +
         geom_vline(data = df_means[df_means$model == "Full", ],
-                   aes(xintercept = estimate), color = "#440154", linetype = "dashed") +
-        geom_vline(data = df_ovb, aes(xintercept = ovb_val),
+                   aes(xintercept = .data$estimate), color = "#440154", linetype = "dashed") +
+        geom_vline(data = df_ovb, aes(xintercept = .data$ovb_val),
                    color = "#addc30", linetype = "solid") +
         geom_vline(data = df_means[df_means$model == "Reduced", ],
-                   aes(xintercept = estimate), color = "#addc30", linetype = "dashed") +
+                   aes(xintercept = .data$estimate), color = "#addc30", linetype = "dashed") +
         scale_fill_manual(values = c(Full = "#440154", Reduced = "#addc30")) +
         scale_color_manual(values = c(Full = "#440154", Reduced = "#addc30")) +
         labs(x = "Estimate", y = "Density", fill = "Model", color = "Model") +
@@ -431,7 +380,7 @@ sim_results <- eventReactive(input$run, {
       # align parameters as columns
       wide <- tidyr::pivot_wider(
         agg[, c("n", "model", "parameter", "cell")],
-        names_from = parameter, values_from = cell
+        names_from = .data$parameter, values_from = .data$cell
       )
 
 
@@ -452,7 +401,7 @@ sim_results <- eventReactive(input$run, {
 
       combined_tbl <- rbind(full_tbl, red_tbl)
 
-      colnames(combined_tbl) <- c("Model", "n", "b₀ (sd)", "b₁ (sd)", "b₂ (sd)", "b₃ (sd)")
+      colnames(combined_tbl) <- c("Model", "n", "b\u2080 (sd)", "b\u2081 (sd)", "b\u2082 (sd)", "b\u2083 (sd)")
 
       combined_tbl
 
@@ -474,7 +423,7 @@ sim_results <- eventReactive(input$run, {
 
       df_fit_long <- tidyr::pivot_longer(
         df_fit,
-        cols = c(r2_f, rse_f, mse_f, r2_r, rse_r, mse_r),
+        cols = c(.data$r2_f, .data$rse_f, .data$mse_f, .data$r2_r, .data$rse_r, .data$mse_r),
         names_to = "metric_model", values_to = "estimate"
       )
       df_fit_long$model  <- ifelse(grepl("_f$", df_fit_long$metric_model), "Full", "Reduced")
@@ -494,7 +443,7 @@ sim_results <- eventReactive(input$run, {
 
       wide <- tidyr::pivot_wider(
         agg[, c("n", "model", "metric", "cell")],
-        names_from = metric, values_from = cell
+        names_from = .data$metric, values_from = .data$cell
       )
 
       # split, order, and label like sim_summary
@@ -511,7 +460,7 @@ sim_results <- eventReactive(input$run, {
 
       combined_tbl <- rbind(full_tbl, red_tbl)
 
-      colnames(combined_tbl) <- c("Model", "n", "R² (sd)", "RMSE (sd)", "MSE (sd)")
+      colnames(combined_tbl) <- c("Model", "n", "R\u00b2 (sd)", "RMSE (sd)", "MSE (sd)")
 
       combined_tbl
     })
@@ -536,14 +485,14 @@ sim_results <- eventReactive(input$run, {
       df_long <- df_sim()$df_fit_long
       df_long$n <- factor(df_long$n, levels = sort(unique(df_long$n)))
 
-      ggplot(df_long, aes(x = estimate, fill = n, color = n)) +
+      ggplot(df_long, aes(x = .data$estimate, fill = .data$n, color = .data$n)) +
         geom_density(alpha = 0.3) +
-        ggh4x::facet_grid2(n~parameter, scales = "free", independent="y",
+        ggh4x::facet_grid2(.data$n~.data$parameter, scales = "free", independent="y",
                            labeller = labeller(parameter = as_labeller(metric_labels, label_parsed))) +
         geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
         scale_fill_viridis_d(option = "viridis") +
         scale_color_viridis_d(option = "viridis") +
-        labs(x = "Difference (Full − Reduced)", y = "Density", fill = "n", color = "n") +
+        labs(x = "Difference (Full \u2212 Reduced)", y = "Density", fill = "n", color = "n") +
         theme_minimal()+
         theme(legend.position="none")
     })

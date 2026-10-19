@@ -7,6 +7,7 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
+#' @importFrom rlang .data
 mod_uncertainty_ui <- function(id) {
   ns <- NS(id)
   tagList(
@@ -74,7 +75,7 @@ mod_uncertainty_ui <- function(id) {
         h6(HTML("<br>")),
         HTML(INS_flip_figs)),
       layout_columns(col_widths=c(4,4,4),
-                     div(uiOutput(ns("flip_table_by_n"))),
+                     div(tableOutput(ns("flip_table_by_n"))),
                      div(plotOutput(ns("flip_b1_by_n"))),
                      div(plotOutput(ns("flip_b2_by_n")))
       ))#,
@@ -145,40 +146,56 @@ gener_draws <- eventReactive(input$run, {
     Vcov    <- sigma() * QXX_inv
     #df      <- n - input$p_emp - 1
     df      <- n - 3 - 1
-    d <- mvtnorm::rmvt(n = 10000, delta = beta(), sigma = Vcov, df = df)
+    d <- mvtnorm::rmvt(n = 10000, delta = beta(), sigma = Vcov, df = df, method = "chol")
     data.frame(n = n, x_critical = -d[,3]/d[,4], z_critical = -d[,2]/d[,4])
   }))
 })
 
+observe({
+  print(any(is.na(gener_draws())))
+})
+observe({
+  any(is.infinite(as.matrix(gener_draws())))
+})
+
+
 flip_summary_by_n <- reactive({
-  gener_draws() |>
-    dplyr::group_by(n) |>
-    dplyr::summarise(
-      x_prop = mean(input$lower_x <= x_critical & x_critical <= input$upper_x),
-      z_prop = mean(input$lower_z <= z_critical & z_critical <= input$upper_z),
-      .groups = "drop"
-    )
+  d <- gener_draws()
+  d$x_in <- input$lower_x <= d$x_critical & d$x_critical <= input$upper_x
+  d$z_in <- input$lower_z <= d$z_critical & d$z_critical <= input$upper_z
+
+  aggregate(cbind(x_prop = x_in, z_prop = z_in) ~ n, data = d, FUN = mean)
+
 })
 
 
 # sign flips across sample sizes ------------------------------------------
+#
+#
+# output$flip_table_by_n<-renderUI({
+#   s<-flip_summary_by_n()
+#   s$x_prop<-round(s$x_prop*100,2)
+#   s$z_prop<-round(s$z_prop*100,2)
+#
+#   gt::gt(s) |>
+#     gt::cols_label(x_prop="% Flips in x", z_prop ="% Flips in z")
+# })
 
-
-output$flip_table_by_n<-renderUI({
-  s<-flip_summary_by_n()
-  s$x_prop<-round(s$x_prop*100,2)
-  s$z_prop<-round(s$z_prop*100,2)
-
-  gt::gt(s) |>
-    gt::cols_label(x_prop="% Flips in x", z_prop ="% Flips in z")
+output$flip_table_by_n <- renderTable({
+  s <- flip_summary_by_n()
+  s$x_prop <- round(s$x_prop * 100, 2)
+  s$z_prop <- round(s$z_prop * 100, 2)
+  names(s) <- c("n", "% Flips in x", "% Flips in z")
+  s
 })
+
 z_range <-reactive({input$upper_z - input$lower_z})
 x_range <-reactive({input$upper_x - input$lower_x})
 #observe({print(max(gener_draws()$x_critical))})
 output$flip_b1_by_n <- renderPlot({
   ggplot(gener_draws(), ggplot2::aes(x = z_critical)) +
     geom_histogram(bins = 200,
-                   aes(fill = after_stat(x >= input$lower_z & x <= input$upper_z)),
+                   aes(fill = after_stat(.data$x >= input$lower_z & .data$x <= input$upper_z)),
     ) +
     scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"),
                       guide = "none") +
@@ -196,7 +213,7 @@ output$flip_b1_by_n <- renderPlot({
 output$flip_b2_by_n <- renderPlot({
   ggplot(gener_draws(), ggplot2::aes(x = x_critical)) +
     geom_histogram(bins = 200,
-                   aes(fill = after_stat(x >= input$lower_x & x <= input$upper_x)),
+                   aes(fill = after_stat(.data$x >= input$lower_x & .data$x <= input$upper_x)),
     ) +
     scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +
     xlim(c(input$lower_x-x_range()*0.1, input$upper_x+x_range()*0.1))+
@@ -248,12 +265,13 @@ This is based on %s plausible combinations of regression weights, simulated from
 # histograms for sign flips -----------------------------------------------
 
 
+
 output$flip_hist_x <- renderPlot({
   d <- data.frame(x_crit = -draws()[,3] / draws()[,4])
 
-  ggplot(d, aes(x = x_crit)) +
+  ggplot(d, aes(x = .data$x_crit)) +
     geom_histogram(
-      aes(fill = after_stat(x >= input$lower_x & x <= input$upper_x)),
+      aes(fill = after_stat(.data$x >= input$lower_x & .data$x <= input$upper_x)),
       bins = 200, color = "white"
     ) +
     scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +
@@ -267,9 +285,9 @@ output$flip_hist_x <- renderPlot({
 output$flip_hist_z <- renderPlot({
   d <- data.frame(z_crit = -draws()[,2] / draws()[,4])
 
-  ggplot(d, aes(x = z_crit)) +
+  ggplot(d, aes(x = .data$z_crit)) +
     geom_histogram(
-      aes(fill = after_stat(x >= input$lower_z & x <= input$upper_z)),
+      aes(fill = after_stat(.data$x >= input$lower_z & .data$x <= input$upper_z)),
       bins = 200, color = "white"
     ) +
     scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"), guide = "none") +
@@ -281,59 +299,59 @@ output$flip_hist_z <- renderPlot({
 })
 
 # johnson neyman ----------------------------------------------------------
-
-output$jn_plot_x <- renderPlot({
-  d <- draws()
-  z_seq <- seq(input$lower_z, input$upper_z, length.out = 200)
-  slopes <- sapply(z_seq, function(z) d[,2] + d[,4]*z)   # b1 + b3*z draws
-  band <- apply(slopes, 2, quantile, probs = c(.025, .5, .975))
-
-  plot_df <- data.frame(
-    z     = z_seq,
-    lower = band[1, ],
-    mid   = band[2, ],
-    upper = band[3, ],
-    pos= band[2, ]>=0
-  )
-
-  ggplot(plot_df, aes(x = z, y = mid)) +
-    geom_ribbon(aes(ymin = lower, ymax = upper, fill = pos),
-                alpha = 0.3) +
-    geom_line(linewidth = 1) +
-    geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"),
-                      guide = "none") +
-    labs(x = "z", y = "Simple slope of x on y") +
-    theme_minimal()
-})
-
-output$jn_plot_z <- renderPlot({
-  d <- draws()
-  x_seq <- seq(input$lower_x, input$upper_x, length.out = 200)
-  slopes <- sapply(x_seq, function(x) d[,3] + d[,4]*x)   # b2 + b3*x draws
-  band <- apply(slopes, 2, quantile, probs = c(.025, .5, .975))
-
-  plot_df <- data.frame(
-    x     = x_seq,
-    lower = band[1, ],
-    mid   = band[2, ],
-    upper = band[3, ],
-    pos= band[2, ]>=0
-  )
-
-  ggplot(plot_df, aes(x = x, y = mid)) +
-    geom_ribbon(aes(ymin = lower, ymax = upper, fill = pos),
-                alpha = 0.3) +
-    geom_line(linewidth = 1) +
-    geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
-    scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"),
-                      guide = "none") +
-    labs(x = "x", y = "Simple slope of  z on y") +
-    theme_minimal()
-
-})
-
- output$plausible_combinations<-renderTable({draws()})
+#
+# output$jn_plot_x <- renderPlot({
+#   d <- draws()
+#   z_seq <- seq(input$lower_z, input$upper_z, length.out = 200)
+#   slopes <- sapply(z_seq, function(z) d[,2] + d[,4]*z)   # b1 + b3*z draws
+#   band <- apply(slopes, 2, quantile, probs = c(.025, .5, .975))
+#
+#   plot_df <- data.frame(
+#     z     = z_seq,
+#     lower = band[1, ],
+#     mid   = band[2, ],
+#     upper = band[3, ],
+#     pos= band[2, ]>=0
+#   )
+#
+#   ggplot(plot_df, aes(x = z, y = mid)) +
+#     geom_ribbon(aes(ymin = lower, ymax = upper, fill = pos),
+#                 alpha = 0.3) +
+#     geom_line(linewidth = 1) +
+#     geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+#     scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"),
+#                       guide = "none") +
+#     labs(x = "z", y = "Simple slope of x on y") +
+#     theme_minimal()
+# })
+#
+# output$jn_plot_z <- renderPlot({
+#   d <- draws()
+#   x_seq <- seq(input$lower_x, input$upper_x, length.out = 200)
+#   slopes <- sapply(x_seq, function(x) d[,3] + d[,4]*x)   # b2 + b3*x draws
+#   band <- apply(slopes, 2, quantile, probs = c(.025, .5, .975))
+#
+#   plot_df <- data.frame(
+#     x     = x_seq,
+#     lower = band[1, ],
+#     mid   = band[2, ],
+#     upper = band[3, ],
+#     pos= band[2, ]>=0
+#   )
+#
+#   ggplot(plot_df, aes(x = x, y = mid)) +
+#     geom_ribbon(aes(ymin = lower, ymax = upper, fill = pos),
+#                 alpha = 0.3) +
+#     geom_line(linewidth = 1) +
+#     geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+#     scale_fill_manual(values = c(`TRUE` = "#addc30", `FALSE` = "#440154"),
+#                       guide = "none") +
+#     labs(x = "x", y = "Simple slope of  z on y") +
+#     theme_minimal()
+#
+# })
+#
+#  output$plausible_combinations<-renderTable({draws()})
   })
 }
 

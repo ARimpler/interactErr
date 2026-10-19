@@ -8,6 +8,7 @@
 #'
 #' @importFrom shiny NS tagList
 #' @importFrom plotly plot_ly layout renderPlotly plotlyOutput add_surface add_markers
+#' @importFrom stats cov qchisq
 mod_dgm_vis_ui <- function(id) {
   ns <- NS(id)
   tagList(fluidRow(

@@ -1,3 +1,12 @@
+signal_variance <- function(beta, signal_matrix) {
+  S <- signal_matrix - signal_matrix[, 1] %*% t(signal_matrix[, 1])
+  as.numeric(t(beta) %*% S %*% beta)
+}
+
+error_variance_y <- function(beta, signal_matrix, R2_true) {
+  R2 <- max(min(R2_true, 0.999999), 1e-12)
+  signal_variance(beta, signal_matrix) * (1 - R2) / R2
+}
 
 # QX ----------------------------------------------------------------------
 QX<-function(mean_x, mean_z, var_x, var_z, cov_xz){
@@ -132,7 +141,7 @@ get_dp_safe <- function(mean, var1, var2, cov, gamma1) {
              gamma1 = gamma1)
   dp <- tryCatch(sn::cp2dp(cp, family = "SN"), error = function(e) NULL)
   shiny::validate(shiny::need(!is.null(dp),
-                              "This skewness/correlation combination isn't feasible for the skew-normal — try smaller skewness values."))
+                              "This skewness/correlation combination isn't feasible for the skew-normal: Try smaller skewness values."))
   dp
 }
 
@@ -152,79 +161,79 @@ rmvsn_safe <- function(n, dp, mean, var1, var2, cov) {
 #              gamma1 = gamma1)
 #   dp <- tryCatch(sn::cp2dp(cp, family = "SN"), error = function(e) NULL)
 #   shiny::validate(shiny::need(!is.null(dp),
-#                               "This skewness/correlation combination isn't feasible for the skew-normal — try smaller skewness values."))
+#                               "This skewness/correlation combination isn't feasible for the skew-normal: Try smaller skewness values."))
 #   sn::rmsn(n, dp = dp)
 # }
 
 
 
-# plot synchronizing ------------------------------------------------------
-
-
-get_camera <- function(x) {
-
-  if (is.null(x)) {
-    return(NULL)
-  }
-
-  # Case 1: nested scene.camera
-  if (!is.null(x[["scene.camera"]])) {
-    return(x[["scene.camera"]])
-  }
-
-  # Case 2: flattened camera properties
-  camera_out <- list(
-    eye = list(
-      x = x[["scene.camera.eye.x"]],
-      y = x[["scene.camera.eye.y"]],
-      z = x[["scene.camera.eye.z"]]
-    ),
-    center = list(
-      x = x[["scene.camera.center.x"]],
-      y = x[["scene.camera.center.y"]],
-      z = x[["scene.camera.center.z"]]
-    ),
-    up = list(
-      x = x[["scene.camera.up.x"]],
-      y = x[["scene.camera.up.y"]],
-      z = x[["scene.camera.up.z"]]
-    )
-  )
-
-  # Remove NULL components
-  camera_out <- lapply(camera_out, function(part) {
-    part[!vapply(part, is.null, logical(1))]
-  })
-
-  # If nothing useful was found, return NULL
-  if (length(unlist(camera_out)) == 0) {
-    return(NULL)
-  }
-
-  camera_out
-}
-
-
-apply_camera <- function(plot_id, cam) {
-
-  if (is.null(cam)) {
-    return()
-  }
-
-  plotly::plotlyProxy(
-    plot_id,
-    session = session
-  ) |>
-    plotly::plotlyProxyInvoke(
-      "relayout",
-      list(
-        scene = list(
-          camera = cam
-        )
-      )
-    )
-}
-
+# # plot synchronizing ------------------------------------------------------
+#
+#
+# get_camera <- function(x) {
+#
+#   if (is.null(x)) {
+#     return(NULL)
+#   }
+#
+#   # Case 1: nested scene.camera
+#   if (!is.null(x[["scene.camera"]])) {
+#     return(x[["scene.camera"]])
+#   }
+#
+#   # Case 2: flattened camera properties
+#   camera_out <- list(
+#     eye = list(
+#       x = x[["scene.camera.eye.x"]],
+#       y = x[["scene.camera.eye.y"]],
+#       z = x[["scene.camera.eye.z"]]
+#     ),
+#     center = list(
+#       x = x[["scene.camera.center.x"]],
+#       y = x[["scene.camera.center.y"]],
+#       z = x[["scene.camera.center.z"]]
+#     ),
+#     up = list(
+#       x = x[["scene.camera.up.x"]],
+#       y = x[["scene.camera.up.y"]],
+#       z = x[["scene.camera.up.z"]]
+#     )
+#   )
+#
+#   # Remove NULL components
+#   camera_out <- lapply(camera_out, function(part) {
+#     part[!vapply(part, is.null, logical(1))]
+#   })
+#
+#   # If nothing useful was found, return NULL
+#   if (length(unlist(camera_out)) == 0) {
+#     return(NULL)
+#   }
+#
+#   camera_out
+# }
+#
+#
+# apply_camera <- function(plot_id, cam, session = shiny::getDefaultReactiveDomain()) {
+#
+#   if (is.null(cam)) {
+#     return()
+#   }
+#
+#   plotly::plotlyProxy(
+#     plot_id,
+#     session = session
+#   ) |>
+#     plotly::plotlyProxyInvoke(
+#       "relayout",
+#       list(
+#         scene = list(
+#           camera = cam
+#         )
+#       )
+#     )
+# }
+#
 
 
 # tangent functions -------------------------------------------------------

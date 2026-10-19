@@ -8,6 +8,7 @@
 #'
 #' @importFrom shiny NS tagList
 #' @import ggplot2
+#' @importFrom rlang .data
 mod_infinite_ui <- function(id) {
   ns <- NS(id)
   tagList(
@@ -200,14 +201,18 @@ mod_infinite_server <- function(id,dgm){
       sprintf("%.3f (%s)", est_val, bias_str)
     }
 
-    data.frame(
+    out<-data.frame(
       Model = est$Model,
-      `β₀ (B0)` = mapply(format_cell, est$b0, bias$B0),
-      `β₁ (B1)` = mapply(format_cell, est$b1, bias$B1),
-      `β₂ (B2)` = mapply(format_cell, est$b2, bias$B2),
-      `β₃ (B3)` = mapply(format_cell, est$b3, bias$B3),
+      `b0` = mapply(format_cell, est$b0, bias$B0),
+      `b1` = mapply(format_cell, est$b1, bias$B1),
+      `b2` = mapply(format_cell, est$b2, bias$B2),
+      `b3` = mapply(format_cell, est$b3, bias$B3),
       check.names = FALSE
     )
+    names(out) <- c("Model",
+                    "\u03b2\u2080 (B0)", "\u03b2\u2081 (B1)",
+                    "\u03b2\u2082 (B2)", "\u03b2\u2083 (B3)")
+    out
   })
 
 
@@ -306,7 +311,7 @@ observe({print(p()$rel_z)})
   output$r2_diff_heatmap <- renderPlot({
 
     df <- res_results()
-    ggplot(df, aes(x = rel_x, y = rel_z, fill = E_R2_d)) +
+    ggplot(df, aes(x = .data$rel_x, y = .data$rel_z, fill = .data$E_R2_d)) +
       geom_tile() +
       scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
       geom_hline(yintercept = floor(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
@@ -315,14 +320,14 @@ observe({print(p()$rel_z)})
       geom_vline(xintercept = ceiling(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
       theme_minimal() +
       labs(x = "Reliability X", y = "Reliability Z",
-           fill = "Δ R²")+
+           fill = "\u0394 R \u00b2")+
       theme(legend.position = "bottom")
   })
 
   output$mse_diff_heatmap <- renderPlot({
 
     df <- res_results()
-    ggplot(df, aes(x = rel_x, y = rel_z, fill = E_RSE_d)) +
+    ggplot(df, aes(x = .data$rel_x, y = .data$rel_z, fill = .data$E_RSE_d)) +
       geom_tile() +
       scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
       geom_hline(yintercept = floor(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
@@ -331,14 +336,14 @@ observe({print(p()$rel_z)})
       geom_vline(xintercept = ceiling(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
       theme_minimal() +
       labs(x = "Reliability X", y = "Reliability Z",
-           fill = "Δ MSE")+
+           fill = "\u0394 MSE")+
       theme(legend.position = "bottom")
   })
 
   output$rmse_diff_heatmap <- renderPlot({
 
     df <- res_results()
-    ggplot(df, aes(x = rel_x, y = rel_z, fill = E_RMSE_d)) +
+    ggplot(df, aes(x = .data$rel_x, y = .data$rel_z, fill = .data$E_RMSE_d)) +
       geom_tile() +
       geom_hline(yintercept = floor(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
       geom_hline(yintercept = ceiling(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
@@ -347,7 +352,7 @@ observe({print(p()$rel_z)})
       scale_fill_gradient2(midpoint = 0, low = "#440154",mid = "white", high = "#addc30") +
       theme_minimal() +
       labs(x = "Reliability X", y = "Reliability Z",
-           fill = "Δ RMSE")+
+           fill = "\u0394 RMSE")+
       theme(legend.position = "bottom")
   })
  return(list(df_estimates=df_estimates,bstar_f=ME_model, bstar_r=ME_OVB_model,

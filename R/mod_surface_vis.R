@@ -7,6 +7,9 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
+#' @import bslib
+#' @importFrom stats cov qchisq
+
 mod_surface_vis_ui <- function(id) {
   ns <- NS(id)
   tagList(fluidRow(
@@ -29,10 +32,10 @@ mod_surface_vis_ui <- function(id) {
            )
       ),
       card(title = "Data-generating model (infinite sample)", height = "605px", full_screen = TRUE,
-           plotlyOutput(ns("dgm_surface"), height = "100%"),
+           plotly::plotlyOutput(ns("dgm_surface"), height = "100%"),
            textOutput(ns("model_equation_true"))),
       card(title = "Applied model (infinite sample)", height = "605px", full_screen = TRUE,
-           plotlyOutput(ns("applied_surface"), height = "100%"),
+           plotly::plotlyOutput(ns("applied_surface"), height = "100%"),
            textOutput(ns("model_equation_applied"))),
       div(
         checkboxInput(ns("show_finite_var"), "Show sampling uncertainty", value = FALSE),
@@ -44,7 +47,7 @@ mod_surface_vis_ui <- function(id) {
         )
       ),
       card(title = "Estimated model (Simulated samples)", height = "605px", full_screen = TRUE,
-           plotlyOutput(ns("est_surface"), height = "100%"),
+           plotly::plotlyOutput(ns("est_surface"), height = "100%"),
            textOutput(ns("model_equation_estimated")))
     ),
     tags$script(HTML(sprintf("
@@ -119,49 +122,6 @@ mod_surface_vis_ui <- function(id) {
   }, 500);
 })();
 ", ns("dgm_surface"), ns("applied_surface"), ns("est_surface")))),
-#     tags$script(HTML(sprintf("
-# (function() {
-#   var idA = '%s', idB = '%s';
-#   var syncing = false;
-#
-#   function bindPair() {
-#     var elA = document.getElementById(idA);
-#     var elB = document.getElementById(idB);
-#     if (!elA || !elB || !elA.layout || !elB.layout) return;
-#
-#     if (elA.removeAllListeners) elA.removeAllListeners('plotly_relayout');
-#     if (elB.removeAllListeners) elB.removeAllListeners('plotly_relayout');
-#
-#     function bind(src, dst) {
-#       src.on('plotly_relayout', function(ed) {
-#         if (syncing || !ed['scene.camera']) return;
-#         syncing = true;
-#         Plotly.relayout(dst, {'scene.camera': ed['scene.camera']}).then(function() {
-#           syncing = false;
-#         });
-#       });
-#     }
-#     bind(elA, elB);
-#     bind(elB, elA);
-#   }
-#
-#   function trySetup() {
-#     var elA = document.getElementById(idA), elB = document.getElementById(idB);
-#     if (!elA || !elB || !elA.layout || !elB.layout) {
-#       setTimeout(trySetup, 200);
-#       return;
-#     }
-#     bindPair();
-#   }
-#   trySetup();
-#
-#   $(document).on('shiny:value', function(ev) {
-#     if (ev.name === idA || ev.name === idB) {
-#       setTimeout(bindPair, 150);
-#     }
-#   });
-# })();
-# ", ns("dgm_surface"), ns("est_surface")))),
     card(
       title = "Range of Predictors",
       accordion(open = FALSE,
@@ -250,7 +210,7 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
 
     band_f <- reactive({
       Sigma <- cov(b_draws_f())
-      q <- qchisq(input$ci_level, df = ncol(b_draws_f()))
+      q <-  qchisq(input$ci_level, df = ncol(b_draws_f()))
       sqrt(q) * sqrt(pointwise_var(design_grid_f(), Sigma))
     })
     band_r <- reactive({
@@ -258,22 +218,6 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
       q <- qchisq(input$ci_level, df = ncol(b_draws_r()))
       sqrt(q) * sqrt(pointwise_var(design_grid_r(), Sigma))
     })
-
-    # ev_point <- reactive({
-    #   req(!matrix_has_error())
-    #   b <- beta_f(); x <- input$eval_x; z <- input$eval_z
-    #   list(x = x, z = z, y = b[1] + b[2]*x + b[3]*z + b[4]*x*z)
-    # })
-    # tangent_x <- reactive({
-    #   req(!matrix_has_error())
-    #   ev <- ev_point(); b <- beta_f()
-    #   ev$y + (b[3] + b[4]*ev$x) * (z_seq() - ev$z)
-    # })
-    # tangent_z <- reactive({
-    #   req(!matrix_has_error())
-    #   ev <- ev_point(); b <- beta_f()
-    #   ev$y + (b[2] + b[4]*ev$z) * (x_seq() - ev$x)
-    # })
 
     render_panel <- function(c_surf, p_surf,b, upper_c = NULL, lower_c = NULL, upper_p = NULL, lower_p = NULL) {
 
@@ -319,8 +263,10 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
       }
 
       p |> plotly::layout(scene = list(
-        xaxis = list(title = "X"), yaxis = list(title = "Z"), zaxis = list(title = "Predicted Y",
-                                                                           range=y_range()),
+        xaxis = list(title = "X"), yaxis = list(title = "Z"),
+        zaxis = list(title = "Predicted Y",
+        range=y_range()),
+        aspectmode = "cube",
         camera = list(eye = list(x = 1.5, y = 1.5, z = 1.5))
       ))
     }
