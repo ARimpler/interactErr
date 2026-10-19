@@ -1,22 +1,34 @@
 Package: m.error
-Title: m_error
-Version: 0.0.0.9000
+Title: Measurement Error in Regression Models with Interactions
+Version: 0.1.0
 Authors@R: 
     person(given = "Aljoscha",
            family = "Rimpler",
            role = c("aut", "cre"),
            email = "aljoscharimpler@gmail.com")
 Description: Shiny app to help determine the effects of omitting product like interaction effects from the dta generating mechanism under measurement error.
-License: What license is it under?
+License: GPL (>= 3)
+Depends: R (>= 4.1.0)
 Imports: 
     config,
-    golem,
+    ggh4x,
+    golem, 
+    mvtnorm, 
+    plotly, 
+    sn, 
+    tidyr, 
+    tinytex,
     shiny,
     bslib,
     ggplot2,
     viridis,
-    pkgload
+    golem,
+    rlang,
+    rmarkdown
 Encoding: UTF-8
 LazyData: true
 Config/roxygen2/version: 8.0.0
 RoxygenNote: 7.3.3
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
