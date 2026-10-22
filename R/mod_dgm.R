@@ -22,7 +22,7 @@ mod_dgm_ui <- function(id) {
       }
     ")),
     card(
-      title = "Current Parameters",
+      #card_header("Current Parameters"),
       fill = FALSE,
       full_screen = FALSE,
       class = "sticky-params-card",
@@ -32,7 +32,7 @@ mod_dgm_ui <- function(id) {
           #style = "max-width: 640px;",
           h6("Input Parameters"),
           tags$table(
-            class = "table table-striped table-bordered",
+            class = "table table-borderless w-auto align-middle",
             tags$thead(tags$tr(
               tags$th(""), tags$th("Mean"), tags$th("Variance"), tags$th("Reliability")
             )),
@@ -55,7 +55,7 @@ mod_dgm_ui <- function(id) {
         div(#style = "max-width: 160px;",
             h6(HTML("<br>")),
             tags$table(
-              class = "table table-striped table-bordered",
+              class = "table table-borderless w-auto align-middle",
               tags$thead(tags$tr(tags$th("Cov(x, z)"))),
               tags$tbody(tags$tr(tags$td(numericInput(ns("cov_xz"),NULL, value = 0)))))
             ),
@@ -64,7 +64,7 @@ mod_dgm_ui <- function(id) {
           h6("Input Regression Weights"),
           tooltip(
             tags$table(
-              class = "table table-striped table-bordered",
+              class = "table table-borderless w-auto align-middle",
               tags$thead(tags$tr(
                 tags$th("\u03b2\u2080"), tags$th("\u03b2\u2081"),
                 tags$th("\u03b2\u2082"), tags$th("\u03b2\u2083")
@@ -82,7 +82,7 @@ mod_dgm_ui <- function(id) {
         div(#style = "max-width: 160px;",
             h6(HTML("<br>")),
             tags$table(
-              class = "table table-striped table-bordered",
+              class = "table table-borderless w-auto align-middle",
               tags$thead(tags$tr(tags$th("True R\u00b2"))),
               tags$tbody(tags$tr(tags$td(numericInput(ns("R2_true"), NULL, value = 0.8, min = 0, max = 1, step = 0.05)))))
         )
@@ -118,6 +118,9 @@ mod_dgm_server <- function(id){
     v_ey <- reactive({
       inputs_ok()
       error_variance_y(beta(), QXs(), input$R2_true)
+    })
+    observe({
+      print(paste("var y", v_ey()))
     })
 
 
