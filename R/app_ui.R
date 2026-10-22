@@ -68,6 +68,9 @@ app_ui <- function(request) {
                             mod_finite_ui_estimate_plot("finite_1"))
                       )
                     )),
+                div(id="resid_visual",
+                    h3("Visualization of Residuals"),
+                    mod_residual_surface_ui("residual_1")),
                 div(id="fit_info",
                     h3("Model Fit"),
                     card(
