@@ -247,3 +247,31 @@ make_tangent_x <- function(b, ev, z_seq) {
 make_tangent_z <- function(b, ev, x_seq) {
   ev$y + (b[2] + b[4]*ev$z) * (x_seq - ev$x)
 }
+
+
+# residual surface --------------------------------------------------------
+
+residual_surface <- function(beta, b, x_seq, z_seq, interaction = TRUE) {
+  truth <- curved_surface(beta, x_seq, z_seq)
+  fit   <- if (interaction) curved_surface(b, x_seq, z_seq) else plane_surface(b, x_seq, z_seq)
+  truth - fit
+}
+
+simulate_cloud <- function(n, mean, var_x, var_z, cov_xz, var_ex, var_ez, var_ey,
+                           beta, b_f, b_r, dp = NULL) {
+  xz <- rmvsn_safe(n, dp, mean, var_x, var_z, cov_xz)
+  x <- xz[, 1]
+  z <- xz[, 2]
+  y <- drop(cbind(1, x, z, x * z) %*% beta) + stats::rnorm(n, 0, sqrt(var_ey))
+
+  xs <- x + stats::rnorm(n, 0, sqrt(var_ex))   # observed predictors
+  zs <- z + stats::rnorm(n, 0, sqrt(var_ez))
+
+  data.frame(
+    x=x,z=z,
+    xs = xs, zs = zs,
+    y=y,
+    res_full = y - drop(cbind(1, xs, zs, xs * zs) %*% b_f),
+    res_red  = y - drop(cbind(1, xs, zs) %*% b_r)
+  )
+}
