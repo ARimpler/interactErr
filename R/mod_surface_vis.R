@@ -12,43 +12,91 @@
 
 mod_surface_vis_ui <- function(id) {
   ns <- NS(id)
-  tagList(fluidRow(
+  tagList(
     h3("Regression Surface Visualization"),
-    layout_columns(
-      col_widths = c(2,3,3,1,3),
-      card(title="Plot Controls",
-           height="605px",
-           layout_columns(
-             col_widths = c(12,12,12),
-             div(tags$b("Range of X"),
-                 numericInput(ns("lower_x"), "Lower Bound X", value = -8),
-                 numericInput(ns("upper_x"), "Upper Bound X", value = 8)),
-             div(tags$b("Range of Z"),
-                 numericInput(ns("lower_z"), "Lower Bound Z", value = -8),
-                 numericInput(ns("upper_z"), "Upper Bound Z", value = 8)),
-             div(tags$b("Evaluation Point"),
-                 numericInput(ns("eval_x"), "X", value = 0),
-                 numericInput(ns("eval_z"), "Z", value = 0))
-           )
-      ),
-      card(title = "Data-generating model (infinite sample)", height = "605px", full_screen = TRUE,
-           plotly::plotlyOutput(ns("dgm_surface"), height = "100%"),
-           textOutput(ns("model_equation_true"))),
-      card(title = "Applied model (infinite sample)", height = "605px", full_screen = TRUE,
-           plotly::plotlyOutput(ns("applied_surface"), height = "100%"),
-           textOutput(ns("model_equation_applied"))),
-      div(
-        checkboxInput(ns("show_finite_var"), "Show sampling uncertainty", value = FALSE),
-        conditionalPanel(
-          condition = sprintf("input['%s']", ns("show_finite_var")),
-          selectInput(ns("unc_n"), "Sample size (n)",
-                      choices = c(25, 50, 100, 250, 500, 1000), selected = 100),
-          numericInput(ns("ci_level"), "CI level", value = 0.95, min = 0.5, max = 0.999, step = 0.01)
+    layout_sidebar(
+      tags$head(tags$style(HTML("
+  .sidebar .table td,
+  .sidebar .table th {
+    vertical-align: middle !important;
+  }
+  .sidebar .table .form-group,
+  .sidebar .table .shiny-input-container {
+    margin: 0 !important;
+  }
+"))),
+      fillable=TRUE,
+      sidebar=sidebar(
+        width=220,
+        open="desktop",
+        h6("Predictor Range"),
+        tags$table(
+          class = "table table-borderless w-auto align-middle",
+          tags$thead(tags$tr(
+            tags$th(""), tags$th("Lower"), tags$th("Upper")
+          )),
+          tags$tbody(
+            tags$tr(
+              tags$td("x", class = "align-middle fw-semibold"),
+              tags$td(numericInput(ns("lower_x"), NULL, value = 2)),
+              tags$td(numericInput(ns("upper_x"), NULL, value = 8))),
+            tags$tr(
+              tags$td("z", class = "align-middle fw-semibold"),
+              tags$td(numericInput(ns("lower_z"), NULL, value = -1)),
+              tags$td(numericInput(ns("upper_z"), NULL, value = 6,5)))
+          )
+        ),
+        h6("Evaluation Points"),
+        tags$table(
+          class = "table table-borderless align-middle w-auto",
+          tags$thead(tags$tr(
+            tags$th("x"), tags$th("z")
+          )),
+          tags$tbody(
+            tags$tr(
+              tags$td(numericInput(ns("eval_x"), NULL, value = 0)),
+              tags$td(numericInput(ns("eval_z"), NULL, value = 0)))
+          )
+        ),
+        div(
+          checkboxInput(ns("show_cloud"), "Data Cloud", value = FALSE)
+        ),
+        div(
+          class = "d-flex align-items-end gap-2",
+          numericInput(ns("n_cloud"), "Points", value = 300, min = 10, max = 3000),
+          actionButton(ns("draw"), "Run")
+        ),
+        div(checkboxInput(ns("show_finite_var"), "Sampling uncertainty", value = FALSE)),
+        div(conditionalPanel(
+              condition = sprintf("input['%s']", ns("show_finite_var")),
+              selectInput(ns("unc_n"), "Sample size (n)",
+                          choices = c(25, 50, 100, 250, 500, 1000), selected = 100),
+              numericInput(ns("ci_level"), "CI level", value = 0.95, min = 0.5, max = 0.999, step = 0.01)
+            )
         )
       ),
-      card(title = "Estimated model (Simulated samples)", height = "605px", full_screen = TRUE,
-           plotly::plotlyOutput(ns("est_surface"), height = "100%"),
-           textOutput(ns("model_equation_estimated")))
+    layout_columns(
+      col_widths = breakpoints(sm = 12, lg = c(4, 4, 4)),
+      card(
+           full_screen = TRUE,
+           card_header("Data-generating model (infinite sample)"),
+           card_body(padding=0,
+                     plotly::plotlyOutput(ns("dgm_surface"))),
+          card_footer(textOutput(ns("model_equation_true")))
+),
+      card(
+        full_screen = TRUE,
+           card_header("Applied model (infinite sample)"),
+           card_body(padding=0,
+                     plotly::plotlyOutput(ns("applied_surface"))),
+           card_footer(textOutput(ns("model_equation_applied")))),
+
+      card(
+        full_screen = TRUE,
+           card_header("Estimated model (Simulated samples)"),
+           card_body(padding=0,
+                     plotly::plotlyOutput(ns("est_surface"))),
+           card_footer(textOutput(ns("model_equation_estimated"))))
     ),
     tags$script(HTML(sprintf("
 (function() {
@@ -130,7 +178,8 @@ mod_surface_vis_ui <- function(id) {
                 accordion_panel("Assumptions", HTML(ASSUMPTIONS_3d_vis))
       )
     )
-  ))
+  )
+)
 }
 
 #' surface_vis Server Functions
@@ -227,22 +276,26 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
 
       p <- plotly::plot_ly() |>
         plotly::add_surface(x = x_seq(), y = z_seq(), z = c_surf,
-                            opacity = 0.7, colorscale = list(c(0,"#440154"), c(1,"#440154")), showscale = FALSE,
+                            opacity = 0.7, colorscale = list(c(0,"#440154"), c(1,"#440154")),
+                            showscale = FALSE,
                             contours = list(
                               x = list(show = TRUE, color = "#EBECF0", width = 1),
                               y = list(show = TRUE, color = "#EBECF0", width = 1)
                             )) |>
         plotly::add_surface(x = x_seq(), y = z_seq(), z = p_surf,
-                            opacity = 0.7, colorscale = list(c(0,"#addc30"), c(1,"#addc30")), showscale = FALSE,
+                            opacity = 0.7, colorscale = list(c(0,"#addc30"), c(1,"#addc30")),
+                            showscale = FALSE,
                             contours = list(
                               x = list(show = TRUE, color = "black", width = 1),
                               y = list(show = TRUE, color = "black", width = 1)
                             )) |>
         plotly::add_trace(x = rep(input$eval_x, length(z_seq())), y = z_seq(), z = tangent_x,
-                          type = "scatter3d", mode = "lines", line = list(color = "#818380", width = 4),
+                          type = "scatter3d", mode = "lines", line = list(color = "#818380",
+                                                                          width = 4),
                           opacity = 0.9, showlegend = FALSE) |>
         plotly::add_trace(x = x_seq(), y = rep(input$eval_z, length(x_seq())), z = tangent_z,
-                          type = "scatter3d", mode = "lines", line = list(color = "#3E424B", width = 4),
+                          type = "scatter3d", mode = "lines", line = list(color = "#3E424B",
+                                                                          width = 4),
                           opacity = 0.9, showlegend = FALSE) |>
         plotly::add_markers(x = ev_point$x, y = ev_point$z, z = ev_point$y,
                             marker = list(color = "black", size = 5), showlegend = FALSE)
@@ -268,14 +321,47 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
         range=y_range()),
         aspectmode = "cube",
         camera = list(eye = list(x = 1.5, y = 1.5, z = 1.5))
-      ))
+      ),
+      margin = list(l = 0, r = 0, b = 0, t = 0, pad = 0),
+      autosize = TRUE)
     }
+
+    cloud <- eventReactive(input$draw, {
+      req(!matrix_has_error())
+      p <- dgm$params()
+      simulate_cloud(
+        n = min(max(input$n_cloud, 10), 5000),
+        mean = c(p$mean_x, p$mean_z),
+        var_x = p$var_x, var_z = p$var_z, cov_xz = p$cov_xz,
+        var_ex = dgm$v_ex(), var_ez = dgm$v_ez(), var_ey = dgm$v_ey(),
+        beta = beta_f(), b_f = b_f(), b_r = b_r()
+      )
+    })
+
     output$dgm_surface <- plotly::renderPlotly({
-      render_panel(c_surface_dgm(), p_surface_dgm(),b=beta_f(), upper_c=NULL, lower_c=NULL, upper_p=NULL, lower_p=NULL)
+      p<-render_panel(c_surface_dgm(), p_surface_dgm(),b=beta_f(), upper_c=NULL, lower_c=NULL, upper_p=NULL, lower_p=NULL)
+      if (isTRUE(input$show_cloud)) {
+        d <- cloud()
+        p <- p |>
+          plotly::add_trace(data = d, x = ~x, y = ~z, z = ~y,
+                            type = "scatter3d", mode = "markers",
+                            marker = list(size = 3, color = "#3E424B", opacity = 0.5),
+                            name = "Full model", showlegend = FALSE)
+      }
+      p
     })
 
     output$applied_surface <- plotly::renderPlotly({
-      render_panel(c_surface_applied(), p_surface_applied(),b=b_f(),upper_c=NULL, lower_c=NULL, upper_p=NULL, lower_p=NULL)
+      p<-render_panel(c_surface_applied(), p_surface_applied(),b=b_f(),upper_c=NULL, lower_c=NULL, upper_p=NULL, lower_p=NULL)
+      if (isTRUE(input$show_cloud)) {
+        d <- cloud()
+        p <- p |>
+          plotly::add_trace(data = d, x = ~xs, y = ~zs, z = ~y,
+                            type = "scatter3d", mode = "markers",
+                            marker = list(size = 3, color = "#3E424B", opacity = 0.5),
+                            name = "Full model", showlegend = FALSE)
+      }
+      p
     })
 
     output$est_surface <- plotly::renderPlotly({
@@ -330,7 +416,7 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
         x_eval, z_eval, b0, b1, b2, b3
       )
     })
-
+    return(list(x_seq = x_seq, z_seq = z_seq))
   })
 }
 
