@@ -15,75 +15,80 @@
 #' @importFrom sn cp2dp rmsn
 #' @importFrom stats rnorm sd aggregate
 #' @importFrom rlang .data
-mod_finite_ui <- function(id) {
+
+mod_finite_ui_sim_settings <- function(id) {
   ns <- NS(id)
   tagList(
-    div(
     h3("Simulation Settings"),
-    card_header("Settings"),
-    card(id="setting",
-         accordion(
-           open=FALSE,
-           accordion_panel("Table Explanation", HTML(INS_finite)),
-           accordion_panel("Background Information", HTML(BACKINF_finite)),
-           accordion_panel("Assumptions", HTML(ASSUMPTIONS_finite))
-         )
-      )
-    ),
-  div(
-      h3("Results Fit and Differentiatability"),
-      card_header("Fit"),
-      card(id="results_fit",
-           accordion(
-             open=FALSE,
-             accordion_panel("Instructions", HTML(INS_fit_sample)),
-             accordion_panel("Background Information", HTML(BACKINF_fit_sample))
-           ),
-           layout_columns(
-          col_widths = c(6, 6),
-          div(h6("Fit Differences"), plotOutput(ns("plot_fit_diff"), height = "500px")),
-          div(h6("Fit Summary"), uiOutput(ns("fit_summ")))
+    card(
+    id = "sim_settings",
+    layout_sidebar(
+      tags$head(tags$style(
+        HTML(
+          "
+  .sidebar .table td,
+  .sidebar .table th {
+    vertical-align: middle !important;
+  }
+  .sidebar .table .form-group,
+  .sidebar .table .shiny-input-container {
+    margin: 0 !important;
+  }
+"
+        )
+      )),
+      fillable = TRUE,
+      sidebar = sidebar(
+        width = 220,
+        open = "desktop",
+        div(numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date(
+
+        )))),
+        div(numericInput(
+          ns("iter"), "Iterations", value = 1000, max = 5000
+        )),
+        div(
+          checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
+          conditionalPanel(
+            condition = sprintf("input['%s']", ns("use_skew")),
+            numericInput(
+              ns("skew_x"),
+              "Skewness (x, \u03B31)",
+              value = 0,
+              min = -0.99,
+              max = 0.99,
+              step = 0.05
+            ),
+            numericInput(
+              ns("skew_z"),
+              "Skewness (z, \u03B31)",
+              value = 0,
+              min = -0.99,
+              max = 0.99,
+              step = 0.05
+            )
+          )
+        ),
+        div(input_task_button(ns("run"), "Run Simulation"))
+      ),
+      div(
+        col_widths = breakpoints(sm = 12, xl = c(8)),
+          card(
+            card_header("Predictor Preview"),
+            card_body(plotOutput(
+              ns("predictor_preview"), height = "220px"))
+          ),
+        accordion(
+          open = FALSE,
+          accordion_panel("Instructions", HTML(INS_est_precision_sample)),
+          accordion_panel(
+            "Background Information",
+            HTML(BACKINF_est_precision_sample)
+          )
         )
       )
     )
   )
-}
-
-mod_finite_ui_sim_settings<-function(id){
-  ns<-NS(id)
-  tagList(
-    div(
-        card(id="sim_settings",
-             accordion(
-               open=FALSE,
-               layout_columns(
-                 col_widths = c(4,4,4),
-                 div(
-                   accordion_panel("Instructions", HTML(INS_est_precision_sample)),
-                   accordion_panel("Background Information", HTML(BACKINF_est_precision_sample))
-                 ),
-                 div(
-                   layout_columns(
-                     col_widths = c(12,12,12),
-                     div(
-                       numericInput(ns("seed"), "Seed", value = as.numeric(Sys.Date()))),
-                     div(numericInput(ns("iter"), "Iterations", value = 1000, max=5000)),
-                     div(
-                       checkboxInput(ns("use_skew"), "Skewed predictors", value = FALSE),
-                       conditionalPanel(
-                         condition = sprintf("input['%s']", ns("use_skew")),
-                         numericInput(ns("skew_x"), "Skewness (x, \u03B31)", value = 0, min = -0.99, max = 0.99, step = 0.05),
-                         numericInput(ns("skew_z"), "Skewness (z, \u03B31)", value = 0, min = -0.99, max = 0.99, step = 0.05)
-                       )
-                     ),
-                     div(input_task_button(ns("run"), "Run Simulation")
-                     )
-                   )
-                 ),
-                 div(plotOutput(ns("predictor_preview"), height = "220px"))               )
-             )
-        )
-    )
   )
 }
 
