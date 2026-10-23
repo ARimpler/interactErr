@@ -129,13 +129,13 @@ mod_residual_surface_server <- function(id, surface, dgm, beta_f, b_f, b_r){
     output$res_plot<-plotly::renderPlotly({
       p<-plotly::plot_ly() |>
       plotly::add_surface(x = x_seq(), y = z_seq(), z = r_full(),
-                          opacity = 0.7, colorscale = list(c(0,"#440154"), c(1,"#440154")), showscale = FALSE,
+                          opacity = 0.7, colorscale = list(c(0,"#fdd525"), c(1,"#fdd525")), showscale = FALSE,
                           contours = list(
                             x = list(show = TRUE, color = "#EBECF0", width = 1),
                             y = list(show = TRUE, color = "#EBECF0", width = 1)
                           )) |>
       plotly::add_surface(x = x_seq(), y = z_seq(), z = r_red(),
-                          opacity = 0.7, colorscale = list(c(0,"#addc30"), c(1,"#addc30")), showscale = FALSE,
+                          opacity = 0.7, colorscale = list(c(0,"#35b799"), c(1,"#35b799")), showscale = FALSE,
                           contours = list(
                             x = list(show = TRUE, color = "black", width = 1),
                             y = list(show = TRUE, color = "black", width = 1)
@@ -145,11 +145,11 @@ mod_residual_surface_server <- function(id, surface, dgm, beta_f, b_f, b_r){
           p <- p |>
             plotly::add_trace(data = d, x = ~x, y = ~z, z = ~res_full,
                               type = "scatter3d", mode = "markers",
-                              marker = list(size = 3, color = "#440154", opacity = 0.5),
+                              marker = list(size = 3, color = "#fdd525", opacity = 0.5),
                               name = "Full model", showlegend = FALSE) |>
             plotly::add_trace(data = d, x = ~x, y = ~z, z = ~res_red,
                               type = "scatter3d", mode = "markers",
-                              marker = list(size = 3, color = "#addc30", opacity = 0.5),
+                              marker = list(size = 3, color = "#35b799", opacity = 0.5),
                               name = "Reduced model", showlegend = FALSE)
         }
       p|> plotly::layout(scene = list(
@@ -166,13 +166,13 @@ mod_residual_surface_server <- function(id, surface, dgm, beta_f, b_f, b_r){
     output$res_squared_plot<-plotly::renderPlotly({
       p<-plotly::plot_ly() |>
         plotly::add_surface(x = x_seq(), y = z_seq(), z = r_full()^2,
-                            opacity = 0.7, colorscale = list(c(0,"#440154"), c(1,"#440154")), showscale = FALSE,
+                            opacity = 0.7, colorscale = list(c(0,"#fdd525"), c(1,"#fdd525")), showscale = FALSE,
                             contours = list(
                               x = list(show = TRUE, color = "#EBECF0", width = 1),
                               y = list(show = TRUE, color = "#EBECF0", width = 1)
                             )) |>
         plotly::add_surface(x = x_seq(), y = z_seq(), z = r_red()^2,
-                            opacity = 0.7, colorscale = list(c(0,"#addc30"), c(1,"#addc30")), showscale = FALSE,
+                            opacity = 0.7, colorscale = list(c(0,"#35b799"), c(1,"#35b799")), showscale = FALSE,
                             contours = list(
                               x = list(show = TRUE, color = "black", width = 1),
                               y = list(show = TRUE, color = "black", width = 1)
@@ -182,11 +182,11 @@ mod_residual_surface_server <- function(id, surface, dgm, beta_f, b_f, b_r){
         p <- p |>
           plotly::add_trace(data = d, x = ~x, y = ~z, z = ~res_full^2,
                             type = "scatter3d", mode = "markers",
-                            marker = list(size = 3, color = "#440154", opacity = 0.5),
+                            marker = list(size = 3, color = "#fdd525", opacity = 0.5),
                             name = "Full model", showlegend = FALSE) |>
           plotly::add_trace(data = d, x = ~x, y = ~z, z = ~res_red^2,
                             type = "scatter3d", mode = "markers",
-                            marker = list(size = 3, color = "#addc30", opacity = 0.5),
+                            marker = list(size = 3, color = "#35b799", opacity = 0.5),
                             name = "Reduced model", showlegend = FALSE)
       }
       p|> plotly::layout(scene = list(
