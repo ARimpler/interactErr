@@ -12,42 +12,22 @@
 mod_infinite_ui <- function(id) {
   ns <- NS(id)
   tagList(
-             # fluidRow(
-             #   h3("Regression Weights and Bias"),
-             #   card(
-             #     id="reg_weights",
-             #     accordion(
-             #       open=FALSE,
-             #       accordion_panel("Instructions", HTML(INS_infinite)),
-             #       accordion_panel("Background Information", HTML(BACKINF_infinite)),
-             #       accordion_panel("Assumptions", HTML(ASSUMPTIONS_infinite))
-             #     ),
-             #     layout_columns(
-             #       col_widths = c(12),
-             #       # tableOutput(ns("coef_table")),
-             #       # tableOutput(ns("bias_table")),
-             #       #tableOutput(ns("combined_table"))
-             #     )
-             #   )),
-
-             fluidRow(
-               h3("Fit, Prediction Error, and their Differences"),
-               card(card_header("Expected Model Fit and Prediction Accuracy on Population Level"),
-                    id="model_fit_pop",
-                    accordion(
-                      open=FALSE,
-                      accordion_panel("Instructions", HTML(INS_accuracy_pop)),
-                      accordion_panel("Background Information", HTML(BACKINF_accuracy_pop)),
-                    ),
-                    #tableOutput(ns("model_fit")),
-                    layout_columns(
-                      widths=c(4,4,4),
-                      plotOutput(ns("r2_diff_heatmap"), height = "500px"),
-                      plotOutput(ns("mse_diff_heatmap"), height = "500px"),
-                      plotOutput(ns("rmse_diff_heatmap"), height = "500px")
-                    )
-               )
-             )
+    h3("Fit, Prediction Error, and their Differences"),
+    card(
+      card_header("Expected Model Fit and Prediction Accuracy on Population Level"),
+      id = "model_fit_pop",
+      accordion(
+        open = FALSE,
+        accordion_panel("Instructions", HTML(INS_accuracy_pop)),
+        accordion_panel("Background Information", HTML(BACKINF_accuracy_pop)),
+      ),
+      layout_columns(
+        widths = c(4, 4, 4),
+        plotOutput(ns("r2_diff_heatmap"), height = "500px"),
+        plotOutput(ns("mse_diff_heatmap"), height = "500px"),
+        plotOutput(ns("rmse_diff_heatmap"), height = "500px")
+      )
+    )
 
   )
 }

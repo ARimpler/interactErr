@@ -131,8 +131,8 @@ mod_residual_surface_server <- function(id, surface, dgm, beta_f, b_f, b_r){
       plotly::add_surface(x = x_seq(), y = z_seq(), z = r_full(),
                           opacity = 0.7, colorscale = list(c(0,"#fdd525"), c(1,"#fdd525")), showscale = FALSE,
                           contours = list(
-                            x = list(show = TRUE, color = "#EBECF0", width = 1),
-                            y = list(show = TRUE, color = "#EBECF0", width = 1)
+                            x = list(show = TRUE, color = "black", width = 1),
+                            y = list(show = TRUE, color = "black", width = 1)
                           )) |>
       plotly::add_surface(x = x_seq(), y = z_seq(), z = r_red(),
                           opacity = 0.7, colorscale = list(c(0,"#35b799"), c(1,"#35b799")), showscale = FALSE,
@@ -168,8 +168,8 @@ mod_residual_surface_server <- function(id, surface, dgm, beta_f, b_f, b_r){
         plotly::add_surface(x = x_seq(), y = z_seq(), z = r_full()^2,
                             opacity = 0.7, colorscale = list(c(0,"#fdd525"), c(1,"#fdd525")), showscale = FALSE,
                             contours = list(
-                              x = list(show = TRUE, color = "#EBECF0", width = 1),
-                              y = list(show = TRUE, color = "#EBECF0", width = 1)
+                              x = list(show = TRUE, color = "black", width = 1),
+                              y = list(show = TRUE, color = "black", width = 1)
                             )) |>
         plotly::add_surface(x = x_seq(), y = z_seq(), z = r_red()^2,
                             opacity = 0.7, colorscale = list(c(0,"#35b799"), c(1,"#35b799")), showscale = FALSE,

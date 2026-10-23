@@ -79,21 +79,21 @@ mod_surface_vis_ui <- function(id) {
       col_widths = breakpoints(sm = 12, lg = c(4, 4, 4)),
       card(
            full_screen = TRUE,
-           card_header("Data-generating model (infinite sample)"),
+           card_header("Noiseless (Population)"),
            card_body(padding=0,
                      plotly::plotlyOutput(ns("dgm_surface"))),
           card_footer(textOutput(ns("model_equation_true")))
 ),
       card(
         full_screen = TRUE,
-           card_header("Applied model (infinite sample)"),
+           card_header("Noisy (Population)"),
            card_body(padding=0,
                      plotly::plotlyOutput(ns("applied_surface"))),
            card_footer(textOutput(ns("model_equation_applied")))),
 
       card(
         full_screen = TRUE,
-           card_header("Estimated model (Simulated samples)"),
+           card_header("Noisy (Simulated Sample)"),
            card_body(padding=0,
                      plotly::plotlyOutput(ns("est_surface"))),
            card_footer(textOutput(ns("model_equation_estimated"))))
@@ -170,14 +170,11 @@ mod_surface_vis_ui <- function(id) {
   }, 500);
 })();
 ", ns("dgm_surface"), ns("applied_surface"), ns("est_surface")))),
-    card(
-      title = "Range of Predictors",
       accordion(open = FALSE,
                 accordion_panel("Instructions", HTML(INS_3d_vis)),
                 accordion_panel("Background Information", HTML(BACKINF_3d_vis)),
                 accordion_panel("Assumptions", HTML(ASSUMPTIONS_3d_vis))
       )
-    )
   )
 )
 }
