@@ -43,7 +43,7 @@ mod_surface_vis_ui <- function(id) {
             tags$tr(
               tags$td("z", class = "align-middle fw-semibold"),
               tags$td(numericInput(ns("lower_z"), NULL, value = -1)),
-              tags$td(numericInput(ns("upper_z"), NULL, value = 6,5)))
+              tags$td(numericInput(ns("upper_z"), NULL, value = 6.5)))
           )
         ),
         h6("Evaluation Points"),
@@ -194,6 +194,7 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
     x_seq <- reactive(seq(input$lower_x, input$upper_x, length.out = 100))
     z_seq <- reactive(seq(input$lower_z, input$upper_z, length.out = 100))
 
+
     y_range <- reactive({
       vals <- c(c_surface_dgm(), c_surface_applied())
       if (isTRUE(input$show_finite_var)) {
@@ -271,30 +272,41 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
     render_panel <- function(c_surf, p_surf,b, upper_c = NULL, lower_c = NULL, upper_p = NULL, lower_p = NULL) {
 
       ev_point <- make_ev_point(b, input$eval_x, input$eval_z)
+
+
+      x_line <- range(c(x_seq(), ev_point$x))
+      z_line <- range(c(z_seq(), ev_point$z))
+
+
       tangent_x <- make_tangent_x(b, ev_point, z_seq())
       tangent_z <- make_tangent_z(b, ev_point, x_seq())
 
+      x_seq_tangent<-sort(c(x_seq(), ev_point$x))
+      z_seq_tangent<-sort(c(z_seq(), ev_point$z))
+
       p <- plotly::plot_ly() |>
-        plotly::add_surface(x = x_seq(), y = z_seq(), z = c_surf,
-                            opacity = 0.7, colorscale = list(c(0,"#440154"), c(1,"#440154")),
+        plotly::add_surface(x = x_seq(), y = z_seq(), z = c_surf, # "#440154" #fde725
+                            opacity = 0.8, colorscale = list(c(0,"#fdd525"), c(1,"#fdd525")),
                             showscale = FALSE,
                             contours = list(
-                              x = list(show = TRUE, color = "#EBECF0", width = 1),
-                              y = list(show = TRUE, color = "#EBECF0", width = 1)
+                              x = list(show = TRUE, color = "black", width = 1), ##EBECF0
+                              y = list(show = TRUE, color = "black", width = 1)
                             )) |>
-        plotly::add_surface(x = x_seq(), y = z_seq(), z = p_surf,
-                            opacity = 0.7, colorscale = list(c(0,"#addc30"), c(1,"#addc30")),
+        plotly::add_surface(x = x_seq(), y = z_seq(), z = p_surf, # #35b779
+                            opacity = 0.8, colorscale = list(c(0,"#35b799"), c(1,"#35b799")),
                             showscale = FALSE,
                             contours = list(
                               x = list(show = TRUE, color = "black", width = 1),
                               y = list(show = TRUE, color = "black", width = 1)
                             )) |>
-        plotly::add_trace(x = rep(input$eval_x, length(z_seq())), y = z_seq(), z = tangent_x,
-                          type = "scatter3d", mode = "lines", line = list(color = "#818380",
+        plotly::add_trace(x = rep(input$eval_x, length(z_seq())),
+                          y = z_seq(), z = tangent_x,
+                          type = "scatter3d", mode = "lines", line = list(color = "#31688e",##818380
                                                                           width = 4),
                           opacity = 0.9, showlegend = FALSE) |>
-        plotly::add_trace(x = x_seq(), y = rep(input$eval_z, length(x_seq())), z = tangent_z,
-                          type = "scatter3d", mode = "lines", line = list(color = "#3E424B",
+        plotly::add_trace(x = x_seq(), y = rep(input$eval_z, length(x_seq())),
+                          z = tangent_z,
+                          type = "scatter3d", mode = "lines", line = list(color = "#440154",
                                                                           width = 4),
                           opacity = 0.9, showlegend = FALSE) |>
         plotly::add_markers(x = ev_point$x, y = ev_point$z, z = ev_point$y,
