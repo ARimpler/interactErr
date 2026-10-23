@@ -35,7 +35,7 @@ mod_residual_surface_ui <- function(id) {
          #   checkboxInput(ns("show_cloud"), "Show data cloud", value = TRUE)
          # )),
          div(card(
-           card_header("Expected Residual Y-\u0176)"),
+           card_header("Expected Residual Y-\u0176"),
            card_body(plotly::plotlyOutput(ns("res_plot"), height = "100%")))),
          card(
            card_header("Expected Squared Residual (Y-\u0176)\u00B2"),
