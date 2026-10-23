@@ -9,28 +9,28 @@
 #' @importFrom shiny NS tagList
 #' @import ggplot2
 #' @importFrom rlang .data
-mod_infinite_ui <- function(id) {
-  ns <- NS(id)
-  tagList(
-    h3("Fit, Prediction Error, and their Differences"),
-    card(
-      card_header("Expected Model Fit and Prediction Accuracy on Population Level"),
-      id = "model_fit_pop",
-      accordion(
-        open = FALSE,
-        accordion_panel("Instructions", HTML(INS_accuracy_pop)),
-        accordion_panel("Background Information", HTML(BACKINF_accuracy_pop)),
-      ),
-      layout_columns(
-        widths = c(4, 4, 4),
-        plotOutput(ns("r2_diff_heatmap"), height = "500px"),
-        plotOutput(ns("mse_diff_heatmap"), height = "500px"),
-        plotOutput(ns("rmse_diff_heatmap"), height = "500px")
-      )
-    )
-
-  )
-}
+# mod_infinite_ui <- function(id) {
+#   ns <- NS(id)
+#   tagList(
+#     h3("Fit, Prediction Error, and their Differences"),
+#     card(
+#       card_header("Expected Model Fit and Prediction Accuracy on Population Level"),
+#       id = "model_fit_pop",
+#       accordion(
+#         open = FALSE,
+#         accordion_panel("Instructions", HTML(INS_accuracy_pop)),
+#         accordion_panel("Background Information", HTML(BACKINF_accuracy_pop)),
+#       ),
+#       layout_columns(
+#         widths = c(4, 4, 4),
+#         plotOutput(ns("r2_diff_heatmap"), height = "500px"),
+#         plotOutput(ns("mse_diff_heatmap"), height = "500px"),
+#         plotOutput(ns("rmse_diff_heatmap"), height = "500px")
+#       )
+#     )
+#
+#   )
+# }
 
 #' @noRd
 mod_infinite_ui_fit_diff_plots <- function(id) {
