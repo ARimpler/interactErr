@@ -61,11 +61,14 @@ mod_surface_vis_ui <- function(id) {
         div(
           checkboxInput(ns("show_cloud"), "Data Cloud", value = FALSE)
         ),
-        div(
-          class = "d-flex align-items-end gap-2",
-          numericInput(ns("n_cloud"), "Points", value = 300, min = 10, max = 3000),
-          actionButton(ns("draw"), "Run")
-        ),
+          conditionalPanel(
+            condition=sprintf("input['%s']", ns("show_cloud")),
+            div(
+              class = "d-flex align-items-end gap-2",
+              numericInput(ns("n_cloud"), "Points", value = 300, min = 10, max = 3000),
+              actionButton(ns("draw"), "Run")
+            )
+          ),
         div(checkboxInput(ns("show_finite_var"), "Sampling uncertainty", value = FALSE)),
         div(conditionalPanel(
               condition = sprintf("input['%s']", ns("show_finite_var")),
