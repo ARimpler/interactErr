@@ -164,9 +164,9 @@ mod_finite_server <- function(id, dgm, df_estimates){
      df_long <- tidyr::pivot_longer(df, cols = c(x, z), names_to = "predictor", values_to = "value")
 
       ggplot(df_long, aes(x = .data$value, fill = .data$predictor, color = .data$predictor)) +
-        geom_density(alpha = 0.3) +
-        scale_fill_manual(values = c(x = "#440154", z = "#addc30")) +
-        scale_color_manual(values = c(x = "#440154", z = "#addc30")) +
+        geom_density(alpha = 0.7) +
+        scale_fill_manual(values = c(x = "#31688e", z = "#440154")) +
+        scale_color_manual(values = c(x = "#31688e", z = "#440154")) +
         labs(x = NULL, y = "Density", fill = NULL, color = NULL) +
         theme_minimal() +
         theme(legend.position = "bottom")

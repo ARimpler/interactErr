@@ -28,12 +28,6 @@ mod_residual_surface_ui <- function(id) {
          ),
          layout_columns(
            col_widths = breakpoints(sm = 12, lg = c(6,6)),
-         # div(layout_columns(
-         #   col_widths = c(1, 1, 1),
-         #   numericInput(ns("n_cloud"), "Points", value = 300, min = 10, max = 3000),
-         #   actionButton(ns("draw"), "Simulate data"),
-         #   checkboxInput(ns("show_cloud"), "Show data cloud", value = TRUE)
-         # )),
          div(card(
            card_header("Expected Residual Y-\u0176"),
            card_body(plotly::plotlyOutput(ns("res_plot"), height = "100%")))),
