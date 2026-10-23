@@ -272,17 +272,11 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
     render_panel <- function(c_surf, p_surf,b, upper_c = NULL, lower_c = NULL, upper_p = NULL, lower_p = NULL) {
 
       ev_point <- make_ev_point(b, input$eval_x, input$eval_z)
+      x_tan <- range(c(x_seq(), ev_point$x))
+      z_tan <- range(c(z_seq(), ev_point$z))
+      tangent_x <- make_tangent_x(b, ev_point, z_tan)
+      tangent_z <- make_tangent_z(b, ev_point, x_tan)
 
-
-      x_line <- range(c(x_seq(), ev_point$x))
-      z_line <- range(c(z_seq(), ev_point$z))
-
-
-      tangent_x <- make_tangent_x(b, ev_point, z_seq())
-      tangent_z <- make_tangent_z(b, ev_point, x_seq())
-
-      x_seq_tangent<-sort(c(x_seq(), ev_point$x))
-      z_seq_tangent<-sort(c(z_seq(), ev_point$z))
 
       p <- plotly::plot_ly() |>
         plotly::add_surface(x = x_seq(), y = z_seq(), z = c_surf, # "#440154" #fde725
@@ -299,12 +293,12 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
                               x = list(show = TRUE, color = "black", width = 1),
                               y = list(show = TRUE, color = "black", width = 1)
                             )) |>
-        plotly::add_trace(x = rep(input$eval_x, length(z_seq())),
-                          y = z_seq(), z = tangent_x,
+        plotly::add_trace(x = rep(input$eval_x, length(z_tan)),
+                          y = z_tan, z = tangent_x,
                           type = "scatter3d", mode = "lines", line = list(color = "#31688e",##818380
                                                                           width = 4),
                           opacity = 0.9, showlegend = FALSE) |>
-        plotly::add_trace(x = x_seq(), y = rep(input$eval_z, length(x_seq())),
+        plotly::add_trace(x = x_tan, y = rep(input$eval_z, length(x_tan)),
                           z = tangent_z,
                           type = "scatter3d", mode = "lines", line = list(color = "#440154",
                                                                           width = 4),
