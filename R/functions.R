@@ -152,89 +152,6 @@ rmvsn_safe <- function(n, dp, mean, var1, var2, cov) {
   sn::rmsn(n, dp = dp)
 }
 
-# rmvsn_safe <- function(n, mean, var1, var2, cov, gamma1) {
-#   if (all(gamma1 == 0)) {
-#     return(mvtnorm::rmvnorm(n, mean, matrix(c(var1, cov, cov, var2), 2, 2)))
-#   }
-#   cp <- list(mean = mean,
-#              var.cov = matrix(c(var1, cov, cov, var2), 2, 2),
-#              gamma1 = gamma1)
-#   dp <- tryCatch(sn::cp2dp(cp, family = "SN"), error = function(e) NULL)
-#   shiny::validate(shiny::need(!is.null(dp),
-#                               "This skewness/correlation combination isn't feasible for the skew-normal: Try smaller skewness values."))
-#   sn::rmsn(n, dp = dp)
-# }
-
-
-
-# # plot synchronizing ------------------------------------------------------
-#
-#
-# get_camera <- function(x) {
-#
-#   if (is.null(x)) {
-#     return(NULL)
-#   }
-#
-#   # Case 1: nested scene.camera
-#   if (!is.null(x[["scene.camera"]])) {
-#     return(x[["scene.camera"]])
-#   }
-#
-#   # Case 2: flattened camera properties
-#   camera_out <- list(
-#     eye = list(
-#       x = x[["scene.camera.eye.x"]],
-#       y = x[["scene.camera.eye.y"]],
-#       z = x[["scene.camera.eye.z"]]
-#     ),
-#     center = list(
-#       x = x[["scene.camera.center.x"]],
-#       y = x[["scene.camera.center.y"]],
-#       z = x[["scene.camera.center.z"]]
-#     ),
-#     up = list(
-#       x = x[["scene.camera.up.x"]],
-#       y = x[["scene.camera.up.y"]],
-#       z = x[["scene.camera.up.z"]]
-#     )
-#   )
-#
-#   # Remove NULL components
-#   camera_out <- lapply(camera_out, function(part) {
-#     part[!vapply(part, is.null, logical(1))]
-#   })
-#
-#   # If nothing useful was found, return NULL
-#   if (length(unlist(camera_out)) == 0) {
-#     return(NULL)
-#   }
-#
-#   camera_out
-# }
-#
-#
-# apply_camera <- function(plot_id, cam, session = shiny::getDefaultReactiveDomain()) {
-#
-#   if (is.null(cam)) {
-#     return()
-#   }
-#
-#   plotly::plotlyProxy(
-#     plot_id,
-#     session = session
-#   ) |>
-#     plotly::plotlyProxyInvoke(
-#       "relayout",
-#       list(
-#         scene = list(
-#           camera = cam
-#         )
-#       )
-#     )
-# }
-#
-
 
 # tangent functions -------------------------------------------------------
 
@@ -248,6 +165,20 @@ make_tangent_z <- function(b, ev, x_seq) {
   ev$y + (b[2] + b[4]*ev$z) * (x_seq - ev$x)
 }
 
+
+equation_text <- function(b, eval_x, eval_z){
+  ev_point<-make_ev_point(b, eval_x, eval_z)
+  x_eval <- ev_point$x
+  z_eval <- ev_point$z
+  b0<-b[1]+b[2]*x_eval+b[3]*z_eval+b[4]*x_eval*z_eval
+  b1<-b[2]+b[4]*z_eval
+  b2<-b[3]+b[4]*x_eval
+  b3<-b[4]
+  sprintf(
+    "At your specified evaluation point x= %.2f, z= %.2f the model parameters are b0=%.2f, b1= %.2f, b2=%.2f. The slope of the interaction term does not change and is b3= %.2f.",
+    x_eval, z_eval, b0, b1, b2, b3
+  )
+}
 
 # residual surface --------------------------------------------------------
 

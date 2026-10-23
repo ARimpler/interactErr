@@ -315,16 +315,16 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
       if (!is.null(upper_c) && !is.null(lower_c)) {
         p <- p |>
           plotly::add_surface(x = x_seq(), y = z_seq(), z = upper_c, opacity = 0.25,
-                              colorscale = list(c(0,"#440154"), c(1,"#440154")), showscale = FALSE) |>
+                              colorscale = list(c(0,"#fdd525"), c(1,"#fdd525")), showscale = FALSE) |>
           plotly::add_surface(x = x_seq(), y = z_seq(), z = lower_c, opacity = 0.25,
-                              colorscale = list(c(0,"#440154"), c(1,"#440154")), showscale = FALSE)
+                              colorscale = list(c(0,"#fdd525"), c(1,"#fdd525")), showscale = FALSE)
       }
       if (!is.null(upper_p) && !is.null(lower_p)) {
         p <- p |>
           plotly::add_surface(x = x_seq(), y = z_seq(), z = upper_p, opacity = 0.25,
-                              colorscale = list(c(0,"#addc30"), c(1,"#addc30")), showscale = FALSE) |>
+                              colorscale = list(c(0,"#35b799"), c(1,"#35b799")), showscale = FALSE) |>
           plotly::add_surface(x = x_seq(), y = z_seq(), z = lower_p, opacity = 0.25,
-                              colorscale = list(c(0,"#addc30"), c(1,"#addc30")), showscale = FALSE)
+                              colorscale = list(c(0,"#35b799"), c(1,"#35b799")), showscale = FALSE)
       }
 
       p |> plotly::layout(scene = list(
@@ -386,47 +386,17 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
 
     output$model_equation_true <- renderText({
       req(!matrix_has_error())
-      b <- beta_f()
-      ev_point<-make_ev_point(b, input$eval_x, input$eval_z)
-      x_eval <- ev_point$x
-      z_eval <- ev_point$z
-      b0<-b[1]+b[2]*x_eval+b[3]*z_eval+b[4]*x_eval*z_eval
-      b1<-b[2]+b[4]*z_eval
-      b2<-b[3]+b[4]*x_eval
-      b3<-b[4]
-      sprintf(
-        "At your specified evaluation point x= %.2f, z= %.2f the model parameters are b0=%.2f, b1= %.2f, b2=%.2f. The slope of the interaction term does not change and is b3= %.2f.",
-        x_eval, z_eval, b0, b1, b2, b3
-      )
+      equation_text(b=beta_f(), eval_x=input$eval_x, eval_z=input$eval_z)
     })
     output$model_equation_applied <- renderText({
       req(!matrix_has_error())
-      b <- b_f()
-      ev_point<-make_ev_point(b, input$eval_x, input$eval_z)
-      x_eval <- ev_point$x
-      z_eval <- ev_point$z
-      b0<-b[1]+b[2]*x_eval+b[3]*z_eval+b[4]*x_eval*z_eval
-      b1<-b[2]+b[4]*z_eval
-      b2<-b[3]+b[4]*x_eval
-      b3<-b[4]
-      sprintf(
-        "At your specified evaluation point x= %.2f, z= %.2f the model parameters are b0=%.2f, b1= %.2f, b2=%.2f. The slope of the interaction term does not change and is b3= %.2f.",
-        x_eval, z_eval, b0, b1, b2, b3
-      )
+      equation_text(b=b_f(), eval_x=input$eval_x, eval_z=input$eval_z)
+
     })
     output$model_equation_estimated <- renderText({
-      b <- E_b_f()
-      ev_point<-make_ev_point(b, input$eval_x, input$eval_z)
-      x_eval <- ev_point$x
-      z_eval <- ev_point$z
-      b0<-b[1]+b[2]*x_eval+b[3]*z_eval+b[4]*x_eval*z_eval
-      b1<-b[2]+b[4]*z_eval
-      b2<-b[3]+b[4]*x_eval
-      b3<-b[4]
-      sprintf(
-        "At your specified evaluation point x= %.2f, z= %.2f the model parameters are b0=%.2f, b1= %.2f, b2=%.2f. The slope of the interaction term does not change and is b3= %.2f.",
-        x_eval, z_eval, b0, b1, b2, b3
-      )
+
+      equation_text(b=E_b_f(), eval_x=input$eval_x, eval_z=input$eval_z)
+
     })
     return(list(x_seq = x_seq, z_seq = z_seq))
   })
