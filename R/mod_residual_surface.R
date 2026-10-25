@@ -27,58 +27,88 @@ mod_residual_surface_ui <- function(id) {
            )
          ),
          layout_columns(
-           col_widths = breakpoints(sm = 12, lg = c(6,6)),
+           col_widths = breakpoints(sm = 12, lg = c(4,4,4)),
          div(card(
            card_header("Expected Residual Y-\u0176"),
            card_body(plotly::plotlyOutput(ns("res_plot"), height = "100%")))),
          card(
            card_header("Expected Squared Residual (Y-\u0176)\u00B2"),
-           card_body(div(plotly::plotlyOutput(ns("res_squared_plot"), height = "100%"))))
+           card_body(div(plotly::plotlyOutput(ns("res_squared_plot"), height = "100%")))),
+         card(
+           card_header("Expected Squared Residual (\u0176FULL-\u0176REDUCED)"),
+           card_body(div(plotly::plotlyOutput(ns("res_obs_plot"), height = "100%"))))
          ),
          tags$script(HTML(sprintf("
 (function() {
-  var ids = ['%s', '%s'];
+  var idA = '%s', idB = '%s', idC = '%s';
   var syncing = false;
-
+  var cBound = false;
   function getEl(id) {
     var el = document.getElementById(id);
     return (el && el.layout) ? el : null;
   }
 
+  function currentGroup() {
+    var group = [idA, idB];
+    if (getEl(idC)) group.push(idC);
+    return group;
+  }
+
   function bindGroup() {
+    var ids = currentGroup();
     var els = ids.map(getEl);
     if (els.some(function(el) { return !el; })) return;
 
-    els.forEach(function(src, i) {
-      // remove only our own previous handler, not plotly's internal ones
-      if (src._camSyncHandler) src.removeListener('plotly_relayout', src._camSyncHandler);
+    els.forEach(function(el) {
+      if (el.removeAllListeners) el.removeAllListeners('plotly_relayout');
+    });
 
-      src._camSyncHandler = function(ed) {
+    els.forEach(function(src, i) {
+      src.on('plotly_relayout', function(ed) {
         if (syncing || !ed['scene.camera']) return;
         syncing = true;
-        var cam = ed['scene.camera'];
-        Promise.all(
-          els.filter(function(_, j) { return j !== i; })
-             .map(function(dst) { return Plotly.relayout(dst, {'scene.camera': cam}); })
-        ).then(function() { syncing = false; }, function() { syncing = false; });
-      };
-      src.on('plotly_relayout', src._camSyncHandler);
+        var updates = els
+        .filter(function(_, j) { return j !== i; })
+        .map(function(dst) { return Plotly.relayout(dst, {'scene.camera': ed['scene.camera']}); });
+        Promise.all(updates).then(function() { syncing = false; });
+      });
     });
+
+    cBound = ids.indexOf(idC) !== -1;
   }
 
-  function trySetup() {
-    if (ids.every(getEl)) { bindGroup(); }
-    else { setTimeout(trySetup, 200); }
+  function trySetupAB() {
+    if (!getEl(idA) || !getEl(idB)) {
+      setTimeout(trySetupAB, 200);
+      return;
+    }
+    bindGroup();
   }
-  trySetup();
+  trySetupAB();
 
-  // Plots re-render (Run button, cloud toggle), which can drop handlers,
-  // so rebind after each render.
+  // Watch for plot C appearing later (e.g. after simulation runs) and fold it in
+  function checkForC() {
+    if (!cBound && getEl(idC)) {
+      bindGroup();
+    }
+  }
+
   $(document).on('shiny:value', function(ev) {
-    if (ids.indexOf(ev.name) !== -1) setTimeout(bindGroup, 150);
+    if (ev.name === idA || ev.name === idB) {
+      setTimeout(bindGroup, 150);
+    }
+    if (ev.name === idC) {
+      setTimeout(checkForC, 150);
+    }
   });
+
+  // fallback poll in case shiny:value doesn't fire cleanly for idC's first render
+  var pollC = setInterval(function() {
+    checkForC();
+    if (cBound) clearInterval(pollC);
+  }, 500);
 })();
-", ns("res_plot"), ns("res_squared_plot"))))
+", ns("res_plot"), ns("res_squared_plot"), ns("res_observed_plot"))))
   )
   )
 }
@@ -183,6 +213,39 @@ mod_residual_surface_server <- function(id, surface, dgm, beta_f, b_f, b_r){
                             marker = list(size = 3, color = "#35b799", opacity = 0.5),
                             name = "Reduced model", showlegend = FALSE)
       }
+      p|> plotly::layout(scene = list(
+        xaxis = list(title = "X"), yaxis = list(title = "Z"),
+        zaxis = list(title = "(Y-\u0176)\u00B2",
+                     range=lim()
+        ),
+        aspectmode = "cube",
+        camera = list(eye = list(x = 1.5, y = 1.5, z = 1.5))
+      ))
+    })
+    r_observed<-reactive({
+      req(!matrix_has_error())
+      residual_surface(b_f(), b_r(), x_seq(), z_seq(), FALSE)
+    })
+    output$res_obs_plot<-plotly::renderPlotly({
+      p<-plotly::plot_ly() |>
+        plotly::add_surface(x = x_seq(), y = z_seq(), z = r_observed(),
+                            opacity = 0.7, colorscale = list(c(0,"#99CE5F"), c(1,"#99CE5F")), showscale = FALSE,
+                            contours = list(
+                              x = list(show = TRUE, color = "black", width = 1),
+                              y = list(show = TRUE, color = "black", width = 1)
+                            ))
+      # if (isTRUE(input$show_cloud) && input$draw > 0) {
+      #   d <- cloud()
+      #   p <- p |>
+      #     plotly::add_trace(data = d, x = ~x, y = ~z, z = ~res_full^2,
+      #                       type = "scatter3d", mode = "markers",
+      #                       marker = list(size = 3, color = "#fdd525", opacity = 0.5),
+      #                       name = "Full model", showlegend = FALSE) |>
+      #     plotly::add_trace(data = d, x = ~x, y = ~z, z = ~res_red^2,
+      #                       type = "scatter3d", mode = "markers",
+      #                       marker = list(size = 3, color = "#35b799", opacity = 0.5),
+      #                       name = "Reduced model", showlegend = FALSE)
+      # }
       p|> plotly::layout(scene = list(
         xaxis = list(title = "X"), yaxis = list(title = "Z"),
         zaxis = list(title = "(Y-\u0176)\u00B2",
