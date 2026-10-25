@@ -308,16 +308,16 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
 
       if (!is.null(upper_c) && !is.null(lower_c)) {
         p <- p |>
-          plotly::add_surface(x = x_seq(), y = z_seq(), z = upper_c, opacity = 0.25,
+          plotly::add_surface(x = x_seq(), y = z_seq(), z = upper_c, opacity = 0.4,
                               colorscale = list(c(0,"#fdd525"), c(1,"#fdd525")), showscale = FALSE) |>
-          plotly::add_surface(x = x_seq(), y = z_seq(), z = lower_c, opacity = 0.25,
+          plotly::add_surface(x = x_seq(), y = z_seq(), z = lower_c, opacity = 0.4,
                               colorscale = list(c(0,"#fdd525"), c(1,"#fdd525")), showscale = FALSE)
       }
       if (!is.null(upper_p) && !is.null(lower_p)) {
         p <- p |>
-          plotly::add_surface(x = x_seq(), y = z_seq(), z = upper_p, opacity = 0.25,
+          plotly::add_surface(x = x_seq(), y = z_seq(), z = upper_p, opacity = 0.4,
                               colorscale = list(c(0,"#35b799"), c(1,"#35b799")), showscale = FALSE) |>
-          plotly::add_surface(x = x_seq(), y = z_seq(), z = lower_p, opacity = 0.25,
+          plotly::add_surface(x = x_seq(), y = z_seq(), z = lower_p, opacity = 0.4,
                               colorscale = list(c(0,"#35b799"), c(1,"#35b799")), showscale = FALSE)
       }
 
