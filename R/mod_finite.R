@@ -346,18 +346,18 @@ sim_results <- eventReactive(input$run, {
                             ovb_val   = c(ovb()$b0, ovb()$b1, ovb()$b2))
 
       ggplot(df_long, aes(x = .data$estimate, fill = .data$model, color = .data$model)) +
-        geom_density(alpha = 0.3) +
+        geom_density(alpha = 0.7) +
         facet_grid(.data$n ~ .data$parameter, scales = "free") +
         geom_vline(data = df_true, aes(xintercept = .data$true_val),
-                   color = "#440154", linetype = "solid") +
+                   color = "#fdd525", linetype = "solid") +
         geom_vline(data = df_means[df_means$model == "Full", ],
-                   aes(xintercept = .data$estimate), color = "#440154", linetype = "dashed") +
+                   aes(xintercept = .data$estimate), color = "#fdd525", linetype = "dashed") +
         geom_vline(data = df_ovb, aes(xintercept = .data$ovb_val),
-                   color = "#addc30", linetype = "solid") +
+                   color = "#35b799", linetype = "solid") +
         geom_vline(data = df_means[df_means$model == "Reduced", ],
-                   aes(xintercept = .data$estimate), color = "#addc30", linetype = "dashed") +
-        scale_fill_manual(values = c(Full = "#440154", Reduced = "#addc30")) +
-        scale_color_manual(values = c(Full = "#440154", Reduced = "#addc30")) +
+                   aes(xintercept = .data$estimate), color = "#35b799", linetype = "dashed") +
+        scale_fill_manual(values = c(Full = "#fdd525", Reduced = "#35b799")) +
+        scale_color_manual(values = c(Full = "#fdd525", Reduced = "#35b799")) +
         labs(x = "Estimate", y = "Density", fill = "Model", color = "Model") +
         theme_minimal()+
         theme(legend.position="bottom")
