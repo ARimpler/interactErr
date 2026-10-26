@@ -85,21 +85,21 @@ mod_surface_vis_ui <- function(id) {
            card_header("Noiseless (Population)"),
            card_body(padding=0,
                      plotly::plotlyOutput(ns("dgm_surface"))),
-          card_footer(textOutput(ns("model_equation_true")))
+          card_footer(uiOutput(ns("model_equation_true")))
 ),
       card(
         full_screen = TRUE,
            card_header("Noisy (Population)"),
            card_body(padding=0,
                      plotly::plotlyOutput(ns("applied_surface"))),
-           card_footer(textOutput(ns("model_equation_applied")))),
+           card_footer(uiOutput(ns("model_equation_applied")))),
 
       card(
         full_screen = TRUE,
            card_header("Noisy (Simulated Sample)"),
            card_body(padding=0,
                      plotly::plotlyOutput(ns("est_surface"))),
-           card_footer(textOutput(ns("model_equation_estimated"))))
+           card_footer(uiOutput(ns("model_equation_estimated"))))
     ),
     tags$script(HTML(sprintf("
 (function() {
@@ -378,20 +378,29 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
       render_panel(c_surface_est(), p_surface_est(),b=E_b_f(), up_c, lo_c, up_p, lo_p)
     })
 
-    output$model_equation_true <- renderText({
+    output$model_equation_true <- renderUI({
       req(!matrix_has_error())
-      equation_text(b=beta_f(), eval_x=input$eval_x, eval_z=input$eval_z)
+      tagList(
+        p(equation_text(b = beta_f(), eval_x = input$eval_x, eval_z = input$eval_z)),
+        p(flip_text(b = beta_f()))
+      )
     })
-    output$model_equation_applied <- renderText({
+    output$model_equation_applied <- renderUI({
       req(!matrix_has_error())
-      equation_text(b=b_f(), eval_x=input$eval_x, eval_z=input$eval_z)
+      tagList(
+        p(equation_text(b=b_f(), eval_x=input$eval_x, eval_z=input$eval_z)),
+        p(flip_text(b = b_f()))
+      )
 
     })
-    output$model_equation_estimated <- renderText({
-
-      equation_text(b=E_b_f(), eval_x=input$eval_x, eval_z=input$eval_z)
-
+    output$model_equation_estimated <- renderUI({
+      tagList(
+        p(equation_text(b=E_b_f(), eval_x=input$eval_x, eval_z=input$eval_z)),
+        p(flip_text(b = E_b_f()))
+      )
     })
+
+
     return(list(x_seq = x_seq, z_seq = z_seq))
   })
 }
