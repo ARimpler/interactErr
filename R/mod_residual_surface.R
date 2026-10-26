@@ -35,7 +35,7 @@ mod_residual_surface_ui <- function(id) {
            card_header("Expected Squared Residual (Y-\u0176)\u00B2"),
            card_body(div(plotly::plotlyOutput(ns("res_squared_plot"), height = "100%")))),
          card(
-           card_header("Expected Squared Residual (\u0176FULL-\u0176REDUCED)"),
+           card_header("Expected Observed Residual \u0176-\u0176"),
            card_body(div(plotly::plotlyOutput(ns("res_obs_plot"), height = "100%"))))
          ),
          tags$script(HTML(sprintf("
@@ -85,8 +85,6 @@ mod_residual_surface_ui <- function(id) {
     bindGroup();
   }
   trySetupAB();
-
-  // Watch for plot C appearing later (e.g. after simulation runs) and fold it in
   function checkForC() {
     if (!cBound && getEl(idC)) {
       bindGroup();
@@ -101,8 +99,6 @@ mod_residual_surface_ui <- function(id) {
       setTimeout(checkForC, 150);
     }
   });
-
-  // fallback poll in case shiny:value doesn't fire cleanly for idC's first render
   var pollC = setInterval(function() {
     checkForC();
     if (cBound) clearInterval(pollC);
@@ -234,21 +230,9 @@ mod_residual_surface_server <- function(id, surface, dgm, beta_f, b_f, b_r){
                               x = list(show = TRUE, color = "black", width = 1),
                               y = list(show = TRUE, color = "black", width = 1)
                             ))
-      # if (isTRUE(input$show_cloud) && input$draw > 0) {
-      #   d <- cloud()
-      #   p <- p |>
-      #     plotly::add_trace(data = d, x = ~x, y = ~z, z = ~res_full^2,
-      #                       type = "scatter3d", mode = "markers",
-      #                       marker = list(size = 3, color = "#fdd525", opacity = 0.5),
-      #                       name = "Full model", showlegend = FALSE) |>
-      #     plotly::add_trace(data = d, x = ~x, y = ~z, z = ~res_red^2,
-      #                       type = "scatter3d", mode = "markers",
-      #                       marker = list(size = 3, color = "#35b799", opacity = 0.5),
-      #                       name = "Reduced model", showlegend = FALSE)
-      # }
       p|> plotly::layout(scene = list(
         xaxis = list(title = "X"), yaxis = list(title = "Z"),
-        zaxis = list(title = "(Y-\u0176)\u00B2",
+        zaxis = list(title = "\u0176-\u0176",
                      range=lim()
         ),
         aspectmode = "cube",
