@@ -107,18 +107,18 @@ mod_dgm_server <- function(id){
     v_ex<-reactive({
       inputs_ok()
       ((1-input$rel_x)/input$rel_x)*input$var_x # if var_x true variance (not observed)
-    })
+    }) |> debounce(500)
 
     v_ez<-reactive({
       inputs_ok()
       ((1-input$rel_z)/input$rel_z)*input$var_z # if var_x true variance (not observed)
-    })
+    }) |> debounce(500)
 
 
     v_ey <- reactive({
       inputs_ok()
       error_variance_y(beta(), QXs(), input$R2_true)
-    })
+    }) |>  debounce(500)
     observe({
       print(paste("var y", v_ey()))
     })
@@ -142,7 +142,7 @@ mod_dgm_server <- function(id){
     beta<-reactive({
       inputs_ok()
       rbind(input$b0, input$b1, input$b2, input$b3)
-    })
+    }) |>  debounce(500)
 
 # Error cauchy schwartz  --------------------------------------------------------
 
