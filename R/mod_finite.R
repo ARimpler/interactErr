@@ -180,23 +180,42 @@ mod_finite_server <- function(id, dgm, df_estimates){
     iterations<- reactive({
       min(max(input$iter, 1), 5000)  # clamp to 5000
     })
+    current_state <- reactive({
+      list(
+        dgm  = dgm$state(),
+        skew = if (isTRUE(input$use_skew)) c(skew_x_d(), skew_z_d()) else c(0, 0)
+      )
+    })
+
+
 
 # simulation loop ---------------------------------------------------------
-sim_results <- eventReactive(input$run, {
+sim_raw <- eventReactive(input$run, {
       set.seed(input$seed)
+    cst<-current_state()
+    #all.equal(cst, current_state())
+    p      <- cst$dgm$params
+    beta   <- cst$dgm$beta
+    var_ex <- cst$dgm$v_ex
+    var_ey <- cst$dgm$v_ey
+    var_ez <- cst$dgm$v_ez
+    skew_x <- cst$skew[1]
+    skew_z <- cst$skew[2]
+    mx <- p$mean_x; mz <- p$mean_z
+    var_x <- p$var_x; var_z <- p$var_z; cov_xz <- p$cov_xz
 
-      mx     <- p()$mean_x
-      mz     <- p()$mean_z
-      var_x  <- p()$var_x
-      var_z  <- p()$var_z
-      cov_xz <- p()$cov_xz
-      var_ey <- dgm$v_ey()
-      var_ex <-dgm$v_ex()
-      var_ez <-dgm$v_ez()
-      beta   <- dgm$beta()
-
-      skew_x <- if (isTRUE(input$use_skew)) input$skew_x else 0
-      skew_z <- if (isTRUE(input$use_skew)) input$skew_z else 0
+      # mx     <- p()$mean_x
+      # mz     <- p()$mean_z
+      # var_x  <- p()$var_x
+      # var_z  <- p()$var_z
+      # cov_xz <- p()$cov_xz
+      # var_ey <- dgm$v_ey()
+      # var_ex <-dgm$v_ex()
+      # var_ez <-dgm$v_ez()
+      # beta   <- dgm$beta()
+      #
+      # skew_x <- if (isTRUE(input$use_skew)) input$skew_x else 0
+      # skew_z <- if (isTRUE(input$use_skew)) input$skew_z else 0
       iter   <- iterations()
 
 
@@ -217,30 +236,15 @@ sim_results <- eventReactive(input$run, {
       b_sim_f  <- matrix(NA, iter, 4)
 
       for(i in 1:iter){
-#      tmp<-rmvnorm(n, c(mx,mz), matrix(c(var_x,cov_xz,cov_xz,var_z),2,2))
-
-
-      # tmp <- rmvsn_safe(n, c(mx, mz), var_x, var_z, cov_xz, c(skew_x, skew_z))
-      # x=tmp[,1]
-      # z=tmp[,2]
-      # x_bar[i] <- mean(x)
-      # z_bar[i] <- mean(z)
-
-      # ex<-rnorm(n, 0, sqrt(var_ex))
-      # ez<-rnorm(n, 0, sqrt(var_ez))
-
       x <- x_all[,i]; z <- z_all[,i]
       ex <- big_ex[,i]; ez <- big_ez[,i]; ey <- big_ey[,i]
 
 
       Xf<-cbind(1,x,z,x*z)
-      #ey<-rnorm(n, 0, sqrt(var_ey))
       y<-Xf%*%beta+ey
       Xf_st<-cbind(1,x+ex,z+ez,(x+ex)*(z+ez))
       QXX<-crossprod(Xf,Xf)
       QXX_st<-crossprod(Xf_st, Xf_st)
-      # b_r<-qr.solve(QXX_st[r,r])%*%(QXX%*%beta)[r]
-      # b_f<-qr.solve(QXX_st)%*%(QXX%*%beta)
       b_r <- qr.solve(QXX_st[r,r], crossprod(Xf_st[,r], y))
       b_f <- qr.solve(QXX_st,      crossprod(Xf_st,     y))
       b_sim_r[i,]<-t(b_r)
@@ -269,7 +273,7 @@ sim_results <- eventReactive(input$run, {
     }
     results[[as.character(n)]] <- list(fit = fit, b_sim_r = b_sim_r, b_sim_f=b_sim_f)
     }
-    list(results = results, beta = beta)
+    list(results = results, beta = beta, state=cst)
 })
 
 
@@ -290,6 +294,14 @@ sim_results <- eventReactive(input$run, {
       } else {
         removeNotification(id = "iter_error")
       }
+    })
+
+    sim_results <- reactive({
+      validate(need(!is.null(tryCatch(sim_raw(), error = function(e) NULL)),
+                    "Click 'Run Simulation' to see sample results."))
+      validate(need(identical(sim_raw()$state, current_state()),
+                    "Parameters have changed since the last simulation. Click 'Run Simulation' to update."))
+      sim_raw()
     })
 
 
