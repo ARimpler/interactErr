@@ -180,6 +180,16 @@ equation_text <- function(b, eval_x, eval_z){
   )
 }
 
+flip_text<-function(b){
+  b1b3=-b[2]/b[4]
+  b2b3=-b[3]/b[4]
+  sprintf("For an infinite sample the sign change of b1 relatig to predictor x
+          is at z = %.2f, the sign change for b2 relating to predictor z is at x= %.2f.",
+          b1b3, b2b3)
+}
+
+
+
 # residual surface --------------------------------------------------------
 
 residual_surface <- function(beta, b, x_seq, z_seq, interaction = TRUE) {
