@@ -306,8 +306,21 @@ beta_r<-reactive({
         R2_true=input$R2_true
       )
     })
+
+    state <- reactive({
+      inputs_ok()
+      list(
+        params = params(),
+        beta   = beta(),
+        v_ex   = v_ex(),
+        v_ey   = v_ey(),
+        v_ez   = v_ez()
+      )
+    })
+
     return(list(
       params=params,
+      state=state,
       QXs=QXs,
       QDs=QDs,
       beta=beta,
