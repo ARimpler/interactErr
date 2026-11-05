@@ -11,7 +11,7 @@
 #' @importFrom tidyr pivot_longer
 #' @importFrom ggh4x facet_grid2
 #' @importFrom bslib  input_task_button
-#' @import ggplot2 viridis
+#' @import ggplot2
 #' @importFrom sn cp2dp rmsn
 #' @importFrom stats rnorm sd aggregate
 #' @importFrom rlang .data
@@ -100,15 +100,15 @@ mod_finite_ui_estimate_summary <- function(id) {
     div(tableOutput(ns("sim_summary")))
   )
 }
-#' @noRd
-mod_finite_ui_estimate_plot <- function(id) {
-  ns <- NS(id)
-  tagList(
-    div(
-      plotOutput(ns("plot_estimates"), height = "500px")
-)
-  )
-}
+#' #' @noRd
+#' mod_finite_ui_estimate_plot <- function(id) {
+#'   ns <- NS(id)
+#'   tagList(
+#'     div(
+#'       plotOutput(ns("plot_estimates"), height = "500px")
+#' )
+#'   )
+#' }
 #' @noRd
 mod_finite_ui_fit_summary <- function(id) {
   ns <- NS(id)
@@ -121,7 +121,8 @@ mod_finite_ui_fit_summary <- function(id) {
 mod_finite_ui_fit_diff_plot <- function(id) {
   ns <- NS(id)
   tagList(
-    div(plotOutput(ns("plot_fit_diff"), height = "500px"))
+    #div(plotOutput(ns("plot_fit_diff"), height = "500px"))
+    div(uiOutput(ns("fitdiff_table")))
   )
 }
 
@@ -260,15 +261,15 @@ sim_raw <- eventReactive(input$run, {
       ete_f<-t(res2)%*%res2
       tss<-t(y-m_y)%*%(y-m_y)
 
-      fit[i,1]<-sqrt(ete_r/(n-3))
-      fit[i,2]<-sqrt(ete_f/(n-4))
-      fit[i,3]<-1-ete_r/tss
-      fit[i,4]<-1-ete_f/tss
-      fit[i,5]<-(t(res1)%*%res1)/n
-      fit[i,6]<-(t(res2)%*%res2)/n
-      fit[i,7]<-aic(ete_r, n, 4)-aic(ete_f, n, 5)
-      fit[i,8]<-bic(ete_r, n, 4)-bic(ete_f, n, 5)
-      fit[i,9]<-(1 - (ete_f/(n-4))/(tss/(n-1))) -
+      fit[i,1]<-sqrt(ete_r/n) # sqrt(ete_r/(n-3)) rse reduced because sample correction, not RMSE
+      fit[i,2]<-sqrt(ete_f/n) # sqrt(ete_f/(n-4)) rse full
+      fit[i,3]<-1-ete_r/tss #r^2 reduced
+      fit[i,4]<-1-ete_f/tss #r^2 full
+      fit[i,5]<-(t(res1)%*%res1)/n # mse reduced
+      fit[i,6]<-(t(res2)%*%res2)/n # mse full
+      fit[i,7]<-aic(ete_r, n, 4)-aic(ete_f, n, 5)  #delta aic
+      fit[i,8]<-bic(ete_r, n, 4)-bic(ete_f, n, 5) #delta bic
+      fit[i,9]<-(1 - (ete_f/(n-4))/(tss/(n-1))) - #delta R^2 adjusted
         (1 - (ete_r/(n-3))/(tss/(n-1)))
     }
     results[[as.character(n)]] <- list(fit = fit, b_sim_r = b_sim_r, b_sim_f=b_sim_f)
@@ -418,7 +419,7 @@ sim_raw <- eventReactive(input$run, {
 
       combined_tbl <- rbind(full_tbl, red_tbl)
 
-      colnames(combined_tbl) <- c("Model", "n", "b\u2080 (sd)", "b\u2081 (sd)", "b\u2082 (sd)", "b\u2083 (sd)")
+      colnames(combined_tbl) <- c("Model", "n", "b<sub>0</sub> (sd)", "b<sub>x</sub> (sd)", "b<sub>z</sub> (sd)", "b<sub>xz</sub> (sd)")
 
       combined_tbl
 
@@ -477,7 +478,7 @@ sim_raw <- eventReactive(input$run, {
 
       combined_tbl <- rbind(full_tbl, red_tbl)
 
-      colnames(combined_tbl) <- c("Model", "n", "R\u00b2 (sd)", "RMSE (sd)", "MSE (sd)")
+      colnames(combined_tbl) <- c("Model", "n", "R<sup>2</sup> (sd)", "RMSE (sd)", "MSE (sd)")
 
       combined_tbl
     })
@@ -490,59 +491,90 @@ sim_raw <- eventReactive(input$run, {
 
 # Fit Difference Plot -----------------------------------------------------
 
-  output$plot_fit_diff <- renderPlot({
+  #
+  # output$plot_fit_diff <- renderPlot({
+  #
+  #   metric_labels <- c(
+  #     d_aic   = "Delta~AIC",
+  #     d_bic   = "Delta~BIC",
+  #     d_r2adj = "Delta~R[adj]^2"
+  #   )
+  #
+  #
+  #     df_long <- df_sim()$df_fit_long
+  #     df_long$n <- factor(df_long$n, levels = sort(unique(df_long$n)))
+  #
+  #     ggplot(df_long, aes(x = .data$estimate, fill = .data$n, color = .data$n)) +
+  #       geom_density(alpha = 0.3) +
+  #       ggh4x::facet_grid2(.data$n~.data$parameter, scales = "free", independent="y",
+  #                          labeller = labeller(parameter = as_labeller(metric_labels, label_parsed))) +
+  #       geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
+  #       scale_fill_viridis_d(option = "viridis") +
+  #       scale_color_viridis_d(option = "viridis") +
+  #       labs(x = "Difference (Full \u2212 Reduced)", y = "Density", fill = "n", color = "n") +
+  #       theme_minimal()+
+  #       theme(legend.position="none")
+  #   })
 
-    metric_labels <- c(
-      d_aic   = "Delta~AIC",
-      d_bic   = "Delta~BIC",
-      d_r2adj = "Delta~R[adj]^2"
-    )
 
+# Fit Difference Table ----------------------------------------------------
+    fitdiff_summary <- reactive({
+      df_fit <- df_sim()$df_fit
 
-      df_long <- df_sim()$df_fit_long
-      df_long$n <- factor(df_long$n, levels = sort(unique(df_long$n)))
+      metrics <- c(d_r2adj = "&Delta;R<sup>2</sup><sub>adj</sub>",
+                   d_aic   = "&Delta;AIC",
+                   d_bic   = "&Delta;BIC")
 
-      ggplot(df_long, aes(x = .data$estimate, fill = .data$n, color = .data$n)) +
-        geom_density(alpha = 0.3) +
-        ggh4x::facet_grid2(.data$n~.data$parameter, scales = "free", independent="y",
-                           labeller = labeller(parameter = as_labeller(metric_labels, label_parsed))) +
-        geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
-        scale_fill_viridis_d(option = "viridis") +
-        scale_color_viridis_d(option = "viridis") +
-        labs(x = "Difference (Full \u2212 Reduced)", y = "Density", fill = "n", color = "n") +
-        theme_minimal()+
-        theme(legend.position="none")
+      summarise_metric <- function(x) {
+        c(mean = mean(x), sd = sd(x), pct_neg = 100 * mean(x < 0))
+      }
+
+      rows <- lapply(split(df_fit, df_fit$n), function(d) {
+        out <- lapply(names(metrics), function(m) {
+          s <- summarise_metric(d[[m]])
+          setNames(
+            c(sprintf("%.3f", s["mean"]),
+              sprintf("%.3f", s["sd"]),
+              sprintf("%.1f", s["pct_neg"])),
+            paste(m, c("mean", "sd", "pct"), sep = ".")
+          )
+        })
+        data.frame(n = d$n[1], as.list(unlist(out)), check.names = FALSE)
+      })
+      tbl <- do.call(rbind, rows)
+      tbl <- tbl[order(tbl$n), ]
+      rownames(tbl) <- NULL
+
+      # column labels: Mean, SD, % < 0 repeated for each metric
+      colnames(tbl) <- c("n", rep(c("Mean", "SD", "% &lt; 0"), times = length(metrics)))
+
+      attr(tbl, "header") <- metrics   # keep for the header row (see below)
+      tbl
+    })
+
+    output$fitdiff_table<-renderUI({
+      tbl<-fitdiff_summary()
+      metrics <- attr(tbl, "header")
+
+      head1 <- tags$tr(
+        tags$th(""),
+        lapply(metrics, function(m) tags$th(colspan = 3, HTML(m), style = "text-align:center;"))
+      )
+
+      head2 <- tags$tr(lapply(colnames(tbl), function(cn) tags$th(HTML(cn))))
+
+      body <- lapply(seq_len(nrow(tbl)), function(i) {
+        tags$tr(lapply(tbl[i, ], function(v) tags$td(v)))
+      })
+
+      tags$table(class = "table table-sm table-bordered",
+                 tags$thead(head1, head2),
+                 tags$tbody(body))
     })
 
     return(list(
       sim_results=sim_results
     ))
-# Fit Difference Table ----------------------------------------------------
-    # output$fit_summary <- renderTable({
-    #   df_fit <- df_sim()$df_fit
-    #   n_vals <- sort(unique(df_fit$n))
-    #
-    #   rows <- lapply(n_vals, function(nn) {
-    #     sub <- df_fit[df_fit$n == nn, ]
-    #
-    #     full_stats <- c(
-    #       r2   = sprintf("%.3f (%.3f)", mean(sub$r2_f),  sd(sub$r2_f)),
-    #       rmse = sprintf("%.3f (%.3f)", mean(sub$rse_f), sd(sub$rse_f)),
-    #       mse  = sprintf("%.3f (%.3f)", mean(sub$mse_f), sd(sub$mse_f))
-    #     )
-    #     red_stats <- c(
-    #       r2   = sprintf("%.3f (%.3f)", mean(sub$r2_r),  sd(sub$r2_r)),
-    #       rmse = sprintf("%.3f (%.3f)", mean(sub$rse_r), sd(sub$rse_r)),
-    #       mse  = sprintf("%.3f (%.3f)", mean(sub$mse_r), sd(sub$mse_r))
-    #     )
-    #     c(n = nn, full_stats, red_stats)
-    #   })
-    #
-    #   df_wide <- as.data.frame(do.call(rbind, rows), stringsAsFactors = FALSE)
-    #
-    #   df_wide
-    #
-    # })
   })
 }
 
