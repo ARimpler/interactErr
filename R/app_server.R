@@ -5,8 +5,6 @@
 #' @import shiny bslib
 #' @noRd
 app_server <- function(input, output, session) {
-
-
   observeEvent(input$nav, {
     bslib::toggle_sidebar(id = "sb", open = input$nav != "Home")
   }, ignoreInit = FALSE)
