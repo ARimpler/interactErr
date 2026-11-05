@@ -175,7 +175,8 @@ equation_text <- function(b, eval_x, eval_z){
   b2<-b[3]+b[4]*x_eval
   b3<-b[4]
   sprintf(
-    "At your specified evaluation point x= %.2f, z= %.2f the model parameters are b0=%.2f, b1= %.2f, b2=%.2f. The slope of the interaction term does not change and is b3= %.2f.",
+    "At your specified evaluation point x= %.2f, z= %.2f the model parameters are b0=%.2f, b<sub>x</sub>= %.2f, b<sub>z</sub>=%.2f.
+    The slope of the interaction term does not change and is b<sub>xz</sub>= %.2f.",
     x_eval, z_eval, b0, b1, b2, b3
   )
 }
@@ -183,8 +184,8 @@ equation_text <- function(b, eval_x, eval_z){
 flip_text<-function(b){
   b1b3=-b[2]/b[4]
   b2b3=-b[3]/b[4]
-  sprintf("For an infinite sample the sign change of b1 relatig to predictor x
-          is at z = %.2f, the sign change for b2 relating to predictor z is at x= %.2f.",
+  sprintf("For an infinite sample the sign change of b<sub>x</sub>
+          is at z = %.2f, the sign change for b<sub>z</sub> is at x= %.2f.",
           b1b3, b2b3)
 }
 
