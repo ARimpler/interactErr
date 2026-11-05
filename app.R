@@ -3,6 +3,7 @@
 # Or use the blue button on top of this file
 # Note that you'll need to upload the whole package to ShinyApps.io
 
+
 pkgload::load_all(export_all = FALSE,helpers = FALSE,attach_testthat = FALSE)
 options( "golem.app.prod" = TRUE)
-m.error::run_app() # add parameters here (if any)
+interactErr::run_app() # add parameters here (if any)
