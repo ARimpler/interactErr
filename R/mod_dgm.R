@@ -66,8 +66,8 @@ mod_dgm_ui <- function(id) {
             tags$table(
               class = "table table-borderless w-auto align-middle",
               tags$thead(tags$tr(
-                tags$th("\u03b2\u2080"), tags$th("\u03b2\u2081"),
-                tags$th("\u03b2\u2082"), tags$th("\u03b2\u2083")
+                tags$th(HTML("&beta;<sub>0</sub>")), tags$th(HTML("&beta;<sub>x</sub>")),
+                tags$th(HTML("&beta;<sub>z</sub>")), tags$th(HTML("&beta;<sub>xz</sub>"))
               )),
               tags$tbody(tags$tr(
                 tags$td(numericInput(ns("b0"), NULL, value = 0)),
@@ -76,14 +76,15 @@ mod_dgm_ui <- function(id) {
                 tags$td(numericInput(ns("b3"), NULL, value = -0.75))
               ))
             ),
-            HTML("\u03b2\u2080=intercept;<br> \u03b2\u2081=linear effect x;<br> \u03b2\u2082=linear effect z;<br> \u03b2\u2083=interaction effect")
+            HTML("&beta;<sub>0</sub>=intercept;<br> &beta;<sub>x</sub>=linear effect x;<br>
+                 &beta;<sub>z</sub>=linear effect z;<br> &beta;<sub>xz</sub>=interaction effect")
           )
         ),
         div(#style = "max-width: 160px;",
             h6(HTML("<br>")),
             tags$table(
               class = "table table-borderless w-auto align-middle",
-              tags$thead(tags$tr(tags$th("True R\u00b2"))),
+              tags$thead(tags$tr(tags$th(HTML("True R<sup>2</sup>")))),
               tags$tbody(tags$tr(tags$td(numericInput(ns("R2_true"), NULL, value = 0.8, min = 0, max = 1, step = 0.05)))))
         )
       )
