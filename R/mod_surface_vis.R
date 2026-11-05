@@ -296,13 +296,13 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
         plotly::add_trace(x = rep(input$eval_x, length(z_tan)),
                           y = z_tan, z = tangent_x,
                           type = "scatter3d", mode = "lines", line = list(color = "#31688e",##818380
-                                                                          width = 4),
-                          opacity = 0.9, showlegend = FALSE) |>
+                                                                          width = 6),
+                          opacity = 1, showlegend = FALSE) |>
         plotly::add_trace(x = x_tan, y = rep(input$eval_z, length(x_tan)),
                           z = tangent_z,
                           type = "scatter3d", mode = "lines", line = list(color = "#440154",
-                                                                          width = 4),
-                          opacity = 0.9, showlegend = FALSE) |>
+                                                                          width = 6),
+                          opacity = 1, showlegend = FALSE) |>
         plotly::add_markers(x = ev_point$x, y = ev_point$z, z = ev_point$y,
                             marker = list(color = "black", size = 5), showlegend = FALSE)
 
@@ -325,6 +325,8 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
         xaxis = list(title = "X"), yaxis = list(title = "Z"),
         zaxis = list(title = "Predicted Y",
         range=y_range()),
+        lighting = list(ambient = 0.6, diffuse = 0.8, specular = 0.15,
+                        roughness = 0.6, fresnel = 0.2),
         aspectmode = "cube",
         camera = list(eye = list(x = 1.5, y = 1.5, z = 1.5))
       ),
@@ -381,22 +383,22 @@ mod_surface_vis_server <- function(id,dgm, beta_f, beta_r, b_f, b_r, sim_results
     output$model_equation_true <- renderUI({
       req(!matrix_has_error())
       tagList(
-        p(equation_text(b = beta_f(), eval_x = input$eval_x, eval_z = input$eval_z)),
-        p(flip_text(b = beta_f()))
+        p(HTML(equation_text(b = beta_f(), eval_x = input$eval_x, eval_z = input$eval_z))),
+        p(HTML(flip_text(b = beta_f())))
       )
     })
     output$model_equation_applied <- renderUI({
       req(!matrix_has_error())
       tagList(
-        p(equation_text(b=b_f(), eval_x=input$eval_x, eval_z=input$eval_z)),
-        p(flip_text(b = b_f()))
+        p(HTML(equation_text(b=b_f(), eval_x=input$eval_x, eval_z=input$eval_z))),
+        p(HTML(flip_text(b = b_f())))
       )
 
     })
     output$model_equation_estimated <- renderUI({
       tagList(
-        p(equation_text(b=E_b_f(), eval_x=input$eval_x, eval_z=input$eval_z)),
-        p(flip_text(b = E_b_f()))
+        p(HTML(equation_text(b=E_b_f(), eval_x=input$eval_x, eval_z=input$eval_z))),
+        p(HTML(flip_text(b = E_b_f())))
       )
     })
 
