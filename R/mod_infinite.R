@@ -9,38 +9,15 @@
 #' @importFrom shiny NS tagList
 #' @import ggplot2
 #' @importFrom rlang .data
-# mod_infinite_ui <- function(id) {
-#   ns <- NS(id)
-#   tagList(
-#     h3("Fit, Prediction Error, and their Differences"),
-#     card(
-#       card_header("Expected Model Fit and Prediction Accuracy on Population Level"),
-#       id = "model_fit_pop",
-#       accordion(
-#         open = FALSE,
-#         accordion_panel("Instructions", HTML(INS_accuracy_pop)),
-#         accordion_panel("Background Information", HTML(BACKINF_accuracy_pop)),
-#       ),
-#       layout_columns(
-#         widths = c(4, 4, 4),
-#         plotOutput(ns("r2_diff_heatmap"), height = "500px"),
-#         plotOutput(ns("mse_diff_heatmap"), height = "500px"),
-#         plotOutput(ns("rmse_diff_heatmap"), height = "500px")
-#       )
-#     )
-#
-#   )
-# }
 
 #' @noRd
 mod_infinite_ui_fit_diff_plots <- function(id) {
   ns <- NS(id)
   tagList(
     layout_columns(
-      widths=c(4,4,4),
+      widths=c(6,6),
       plotOutput(ns("r2_diff_heatmap"), height = "500px"),
-      plotOutput(ns("rmse_diff_heatmap"), height = "500px"),
-      plotOutput(ns("mse_diff_heatmap"), height = "500px")
+      plotOutput(ns("rmse_diff_heatmap"), height = "500px")
     )
   )
 }
@@ -190,8 +167,8 @@ mod_infinite_server <- function(id,dgm){
       check.names = FALSE
     )
     names(out) <- c("Model",
-                    "\u03b2\u2080 (B0)", "\u03b2\u2081 (B1)",
-                    "\u03b2\u2082 (B2)", "\u03b2\u2083 (B3)")
+                    "&beta;<sub>0</sub> (B<sub>0</sub>)", "&beta;<sub>x</sub> (B<sub>x</sub>)",
+                    "&beta;<sub>z</sub>(B<sub>z</sub>)", "&beta;<sub>xz</sub> (B<sub>xz</sub>)")
     out
   })
 
@@ -218,6 +195,8 @@ mod_infinite_server <- function(id,dgm){
       RMSE = c(fit_no_error[3], fit_ME[3],fit_ovb[3], fit_joint[3]),
       MSE = c(fit_no_error[1],  fit_ME[1],fit_ovb[1], fit_joint[1])
     )
+    colnames(df) <- c("Model", "R<sup>2</sup>", "RMSE", "MSE")
+
     df
   })
 
@@ -277,8 +256,9 @@ mod_infinite_server <- function(id,dgm){
 #
   output$model_fit <- renderTable({
     fit_T()
-  }, digits = 3,
-  sanitize.text.function = function(x) x)
+  }, digits = 3, bordered=TRUE,
+  sanitize.text.function = identity,
+  sanitize.colnames.function = identity )
 
 
 
@@ -304,21 +284,21 @@ observe({print(p()$rel_z)})
       theme(legend.position = "bottom")
   })
 
-  output$mse_diff_heatmap <- renderPlot({
-
-    df <- res_results()
-    ggplot(df, aes(x = .data$rel_x, y = .data$rel_z, fill = .data$E_RSE_d)) +
-      geom_tile() +
-      scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
-      geom_hline(yintercept = floor(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
-      geom_hline(yintercept = ceiling(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
-      geom_vline(xintercept = floor(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
-      geom_vline(xintercept = ceiling(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
-      theme_minimal() +
-      labs(x = "Reliability X", y = "Reliability Z",
-           fill = "\u0394 MSE")+
-      theme(legend.position = "bottom")
-  })
+  # output$mse_diff_heatmap <- renderPlot({
+  #
+  #   df <- res_results()
+  #   ggplot(df, aes(x = .data$rel_x, y = .data$rel_z, fill = .data$E_RSE_d)) +
+  #     geom_tile() +
+  #     scale_fill_gradient2(midpoint = 0, low = "#440154", mid = "white", high = "#addc30") +
+  #     geom_hline(yintercept = floor(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
+  #     geom_hline(yintercept = ceiling(p()$rel_z*10)/10, color = "black", linewidth = 0.25)+
+  #     geom_vline(xintercept = floor(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
+  #     geom_vline(xintercept = ceiling(p()$rel_x*10)/10, color = "black", linewidth = 0.25)+
+  #     theme_minimal() +
+  #     labs(x = "Reliability X", y = "Reliability Z",
+  #          fill = "\u0394 MSE")+
+  #     theme(legend.position = "bottom")
+  # })
 
   output$rmse_diff_heatmap <- renderPlot({
 
