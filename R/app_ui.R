@@ -34,8 +34,9 @@ app_ui <- function(request) {
                         div(tags$b("Infinite Sample Results"),
                             mod_infinite_ui_bias_weights_combined("infinite_1")),
                         div(tags$b("Simulation Results"),
-                            mod_finite_ui_estimate_summary("finite_1"),
-                            mod_finite_ui_estimate_plot("finite_1"))
+                            mod_finite_ui_estimate_summary("finite_1")#,
+                            #mod_finite_ui_estimate_plot("finite_1")
+                            )
                       ),
                       accordion(
                         open=FALSE,
