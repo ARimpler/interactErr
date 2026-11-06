@@ -85,7 +85,7 @@ mod_dgm_ui <- function(id) {
             tags$table(
               class = "table table-borderless w-auto align-middle",
               tags$thead(tags$tr(tags$th(HTML("True R<sup>2</sup>")))),
-              tags$tbody(tags$tr(tags$td(numericInput(ns("R2_true"), NULL, value = 0.8, min = 0, max = 1, step = 0.05)))))
+              tags$tbody(tags$tr(tags$td(numericInput(ns("R2_true"), NULL, value = 0.66, min = 0, max = 1, step = 0.05)))))
         )
       )
     ),
