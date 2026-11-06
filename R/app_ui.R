@@ -110,7 +110,7 @@ golem_add_external_resources <- function() {
     favicon("loki_ico"),
     bundle_resources(
       path = app_sys("app/www"),
-      app_title = "m.error"
+      app_title = "interactErr"
     )
     # Add here other external resources
     # for example, you can add shinyalert::useShinyalert()

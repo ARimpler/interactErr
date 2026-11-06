@@ -47,7 +47,7 @@ usethis::use_test("app")
 # Documentation
 
 ## Vignette ----
-usethis::use_vignette("m.error")
+usethis::use_vignette("interactErr")
 devtools::build_vignettes()
 
 ## Code Coverage----

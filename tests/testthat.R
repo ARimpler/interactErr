@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(m.error)
+library(interactErr)
 
-test_check("m.error")
+test_check("interactErr")
