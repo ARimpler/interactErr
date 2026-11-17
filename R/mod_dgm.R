@@ -39,15 +39,15 @@ mod_dgm_ui <- function(id) {
             tags$tbody(
               tags$tr(
                 tags$td("x"),
-                tags$td(numericInput(ns("mean_x"), NULL, value = 5)),
-                tags$td(numericInput(ns("var_x"),  NULL, value = 1, min = 0)),
-                tags$td(numericInput(ns("rel_x"),  NULL, value = 0.8, min = 0, max = 1))
+                tags$td(numericInput(ns("mean_x"), NULL, value = 5, updateOn = "blur")),
+                tags$td(numericInput(ns("var_x"),  NULL, value = 1, min = 0, updateOn = "blur")),
+                tags$td(numericInput(ns("rel_x"),  NULL, value = 0.8, min = 0, max = 1, updateOn = "blur"))
               ),
               tags$tr(
                 tags$td("z"),
-                tags$td(numericInput(ns("mean_z"), NULL, value = 3)),
-                tags$td(numericInput(ns("var_z"),  NULL, value = 1, min = 0)),
-                tags$td(numericInput(ns("rel_z"),  NULL, value = 0.8, min = 0, max = 1))
+                tags$td(numericInput(ns("mean_z"), NULL, value = 3, updateOn = "blur")),
+                tags$td(numericInput(ns("var_z"),  NULL, value = 1, min = 0, updateOn = "blur")),
+                tags$td(numericInput(ns("rel_z"),  NULL, value = 0.8, min = 0, max = 1, updateOn = "blur"))
               )
             )
           )
@@ -57,7 +57,7 @@ mod_dgm_ui <- function(id) {
             tags$table(
               class = "table table-borderless w-auto align-middle",
               tags$thead(tags$tr(tags$th("Cov(x, z)"))),
-              tags$tbody(tags$tr(tags$td(numericInput(ns("cov_xz"),NULL, value = 0)))))
+              tags$tbody(tags$tr(tags$td(numericInput(ns("cov_xz"),NULL, value = 0, updateOn = "blur")))))
             ),
         div(
           #style = "max-width: 640px;",
@@ -70,10 +70,10 @@ mod_dgm_ui <- function(id) {
                 tags$th(HTML("&beta;<sub>z</sub>")), tags$th(HTML("&beta;<sub>xz</sub>"))
               )),
               tags$tbody(tags$tr(
-                tags$td(numericInput(ns("b0"), NULL, value = 0)),
-                tags$td(numericInput(ns("b1"), NULL, value = 1)),
-                tags$td(numericInput(ns("b2"), NULL, value = 1)),
-                tags$td(numericInput(ns("b3"), NULL, value = -0.75))
+                tags$td(numericInput(ns("b0"), NULL, value = 0, updateOn = "blur")),
+                tags$td(numericInput(ns("b1"), NULL, value = 1, updateOn = "blur")),
+                tags$td(numericInput(ns("b2"), NULL, value = 1, updateOn = "blur")),
+                tags$td(numericInput(ns("b3"), NULL, value = -0.75, updateOn = "blur"))
               ))
             ),
             HTML("&beta;<sub>0</sub>=intercept;<br> &beta;<sub>x</sub>=linear effect x;<br>
@@ -85,7 +85,7 @@ mod_dgm_ui <- function(id) {
             tags$table(
               class = "table table-borderless w-auto align-middle",
               tags$thead(tags$tr(tags$th(HTML("True R<sup>2</sup>")))),
-              tags$tbody(tags$tr(tags$td(numericInput(ns("R2_true"), NULL, value = 0.66, min = 0, max = 1, step = 0.05)))))
+              tags$tbody(tags$tr(tags$td(numericInput(ns("R2_true"), NULL, value = 0.66, min = 0, max = 1, step = 0.05, updateOn = "blur")))))
         )
       )
     ),
@@ -104,125 +104,97 @@ mod_dgm_server <- function(id){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
+    params_raw <- reactive({
+      list(
+        mean_x = input$mean_x, var_x = input$var_x, rel_x = input$rel_x,
+        mean_z = input$mean_z, var_z = input$var_z, rel_z = input$rel_z,
+        cov_xz = input$cov_xz,
+        b0 = input$b0, b1 = input$b1, b2 = input$b2, b3 = input$b3,
+        R2_true = input$R2_true
+      )
+    })
+
+    params_d <- debounce(params_raw, 600)
+
+    validation <- reactive({
+      p <- params_d()
+      if (any(vapply(p, function(x) is.null(x) || is.na(x), logical(1))))
+        return("na")
+      errs <- character()
+      if (p$var_x <= 0 || p$var_z <= 0)
+        errs["var"] <- "The predictor variance has to be larger than 0."
+      if (p$rel_x <= 0 || p$rel_z <= 0 || p$rel_x > 1 || p$rel_z > 1)
+        errs["rel"] <- "Reliability must be > 0 and <= 1."
+      if (!is.na(p$var_x) && p$var_x > 0 && p$var_z > 0 &&
+          abs(p$cov_xz) > sqrt(p$var_x * p$var_z)) # Error cauchy schwartz
+        errs["cov"] <- sprintf("|Cov(X,Z)| must be <= %.3f", sqrt(p$var_x * p$var_z))
+      errs
+    })
+
+    params <- reactive({
+      v <- validation()
+      req(!identical(v, "na"), length(v) == 0)
+      params_d()
+    })
+
+    observe({
+      v <- validation()
+      if (identical(v, "na")) return()
+      for (k in c("var", "rel", "cov")) {
+        id <- paste0(k, "_error")
+        if (k %in% names(v)) showNotification(v[[k]], id = id, type = "error", duration = NULL)
+        else removeNotification(id)
+      }
+    })
+
 # reliability to error variance -------------------------------------------
+
     v_ex<-reactive({
-      inputs_ok()
-      ((1-input$rel_x)/input$rel_x)*input$var_x # if var_x true variance (not observed)
-    }) |> debounce(500)
+      p<-params()
+      ((1-p$rel_x)/p$rel_x)*p$var_x # if var_x true variance (not observed)
+    })
 
     v_ez<-reactive({
-      inputs_ok()
-      ((1-input$rel_z)/input$rel_z)*input$var_z # if var_x true variance (not observed)
-    }) |> debounce(500)
+      p<-params()
+      ((1-p$rel_z)/p$rel_z)*p$var_z # if var_x true variance (not observed)
+    })
 
 
     v_ey <- reactive({
-      inputs_ok()
-      error_variance_y(beta(), QXs(), input$R2_true)
-    }) |>  debounce(500)
-    observe({
-      print(paste("var y", v_ey()))
+      p<-params()
+      error_variance_y(beta(), QXs(), p$R2_true)
     })
 
-
-    # v_ey <- reactive({
-    #   inputs_ok()
-    #     # center-consistent explained (signal) variance:
-    #     S_matrix <- QXs() - QXs()[,1] %*% t(QXs()[,1])
-    #     signal_var_y <- as.numeric(t(beta()) %*% S_matrix %*% beta())
-    #     # clamp R2 to avoid division-by-zero / extremes
-    #     R2 <- max(min(input$R2_true, 0.999999), 1e-12)
-    #     # noise variance implied by R2: E_y = S * (1 - R2) / R2
-    #     noise_y <- signal_var_y * (1 - R2) / R2
-    #     noise_y
-    # })
     # observe({
-    #   print(v_ey())
+    #   print(paste("var y", v_ey()))
     # })
+
+    matrices <- reactive({
+      p    <- params()
+      QX_m <- QX(mean_x = p$mean_x, mean_z = p$mean_z,
+                 var_x = p$var_x, var_z = p$var_z, cov_xz = p$cov_xz)
+      QD_m <- QD(var_error_x = v_ex(), var_error_z = v_ez(),
+                 var_x = p$var_x, var_z = p$var_z,
+                 mean_x = p$mean_x, mean_z = p$mean_z)
+      ok <- tryCatch({
+        qr.solve(QX_m)
+        qr.solve(QX_m + QD_m)
+        TRUE
+      }, error = function(e) FALSE)
+      list(QX = QX_m, QD = QD_m, ok = ok)
+    })
+
+    matrix_has_error <- reactive(!matrices()$ok)
+
 
     beta<-reactive({
-      inputs_ok()
-      rbind(input$b0, input$b1, input$b2, input$b3)
-    }) |>  debounce(500)
 
-# Error cauchy schwartz  --------------------------------------------------------
-
-    observe({
-      inputs_ok()
-      max_cov <- sqrt(input$var_x * input$var_z)
-
-      if (abs(input$cov_xz) > max_cov) {
-        showNotification(
-          paste0(
-            "Covariance must satisfy |Cov(X,Z)| \u2264 ",
-            round(max_cov, 3)
-          ),
-          id="cov_error",
-          type = "error",
-          duration = NULL
-        )
-      } else {
-        removeNotification(id = "cov_error")
-      }
+      p <- params()
+      rbind(p$b0, p$b1, p$b2, p$b3)
     })
 
-# Error reliability 0 -----------------------------------------------------
+# Error: near-singular moment matrix -----------------------------------
     observe({
-      inputs_ok()
-
-      if (input$rel_x ==0|| input$rel_z ==0||input$rel_x>1||input$rel_z>1) {
-        showNotification(
-          paste0(
-            "The reliability hast to be larger 0 and smaller 1"
-          ),
-          id="rel_error",
-          type = "error",
-          duration = NULL
-        )
-      } else {
-        removeNotification(id = "rel_error")
-      }
-    })
-
-
-
-# Error var= 0 ------------------------------------------------------------
-
-    observe({
-      inputs_ok()
-      if (input$var_x ==0|| input$var_z ==0) {
-        showNotification(
-          paste0(
-            "The predictor variance has to be larger 0."
-          ),
-          id="var_error",
-          type = "error",
-          duration = NULL
-        )
-      } else {
-        removeNotification(id = "var_error")
-      }
-    })
-
-
-# Error inputs NA ---------------------------------------------------------
-
-    inputs_ok <- reactive({
-      vals <- list(input$mean_x, input$var_x, input$rel_x,
-                   input$mean_z, input$var_z, input$rel_z,
-                   input$cov_xz, input$b0, input$b1, input$b2, input$b3, input$R2_true)
-      req(all(!vapply(vals, function(x) is.null(x) || is.na(x), logical(1))))
-      TRUE
-    })
-
-    # Error: near-singular moment matrix -----------------------------------
-    M1_error <- reactiveVal(FALSE)
-    M2_error <- reactiveVal(FALSE)
-    matrix_has_error <- reactive({ M1_error() || M2_error() })
-    observe({print(c(M1_error(), M2_error(),matrix_has_error() ))})
-
-    observe({
-      inputs_ok()
       req(input$var_x > 0, input$var_z > 0)
       req(abs(input$cov_xz) <= sqrt(input$var_x * input$var_z))
 
@@ -239,77 +211,26 @@ mod_dgm_server <- function(id){
 
 
     QXs<-reactive({
-      inputs_ok()
-      req(input$var_x > 0&&input$var_z>0)
-      req(abs(input$cov_xz) <= sqrt(input$var_x * input$var_z))
-      M<-QX(mean_x=input$mean_x, mean_z=input$mean_z,
-       var_x = input$var_x, var_z = input$var_z, cov_xz = input$cov_xz)
-      result <- tryCatch({
-        qr.solve(M)
-        M
-      }, error = function(e) NULL)
-
-      M1_error(is.null(result))
-      result
+      m <- matrices(); req(m$ok); m$QX
       })
-
-    # QXs<-reactive({
-    #   inputs_ok()
-    #   req(input$var_x > 0&&input$var_z>0)
-    #   req(abs(input$cov_xz) <= sqrt(input$var_x * input$var_z))
-    #   QX(mean_x=input$mean_x, mean_z=input$mean_z,
-    #         var_x = input$var_x, var_z = input$var_z, cov_xz = input$cov_xz)
-    # })
 
     Xy<-reactive({E_Xy(beta=beta(), signal_matrix = QXs())})
 
-
     QDs<-reactive({
-      inputs_ok()
-      req(input$rel_x>0&&input$rel_z>0)
-      M<-QD(var_error_x = v_ex(),var_error_z = v_ez(), var_x = input$var_x , var_z = input$var_z, mean_x = input$mean_x,
-         mean_z = input$mean_z)
-      result <- tryCatch({
-        qr.solve(M+QXs())
-        M
-      }, error = function(e) NULL)
-
-      M2_error(is.null(result))
-      result
+      m <- matrices(); req(m$ok); m$QD
     })
-
 
 # beta reduced ------------------------------------------------------------
-
 beta_r<-reactive({
   inputs_ok()
-  b0<-beta()[1]+beta()[4]*(input$cov_xz/(input$var_x*input$var_z)-input$mean_x*input$mean_z)
-  b1<-beta()[2]+beta()[4]*input$mean_z
-  b2<-beta()[3]+beta()[4]*input$mean_x
+  p <- params()
+  b0<-beta()[1]+beta()[4]*(p$cov_xz/(p$var_x*p$var_z)-p$mean_x*p$mean_z)
+  b1<-beta()[2]+beta()[4]*p$mean_z
+  b2<-beta()[3]+beta()[4]*p$mean_x
   c(b0,b1,b2) })
-  # test --------------------------------------------------------------------
 
-
-    # return parameters for other modules -------------------------------------
-    params <- reactive({
-      list(
-        mean_x = input$mean_x,
-        var_x = input$var_x,
-        rel_x = input$rel_x,
-        mean_z = input$mean_z,
-        var_z = input$var_z,
-        rel_z = input$rel_z,
-        cov_xz=input$cov_xz,
-        b0 = input$b0,
-        b1 = input$b1,
-        b2 = input$b2,
-        b3 = input$b3,
-        R2_true=input$R2_true
-      )
-    })
-
+ # return parameters for other modules -------------------------------------
     state <- reactive({
-      inputs_ok()
       list(
         params = params(),
         beta   = beta(),
@@ -330,7 +251,6 @@ beta_r<-reactive({
       v_ey=v_ey,
       v_ex=v_ex,
       v_ez=v_ez,
-      inputs_ok=inputs_ok,
       matrix_has_error=matrix_has_error)
     )
 
