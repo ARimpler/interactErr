@@ -38,12 +38,12 @@ mod_surface_vis_ui <- function(id) {
           tags$tbody(
             tags$tr(
               tags$td("x", class = "align-middle fw-semibold"),
-              tags$td(numericInput(ns("lower_x"), NULL, value = 2)),
-              tags$td(numericInput(ns("upper_x"), NULL, value = 8))),
+              tags$td(numericInput(ns("lower_x"), NULL, value = 2, updateOn = "blur")),
+              tags$td(numericInput(ns("upper_x"), NULL, value = 8, updateOn = "blur"))),
             tags$tr(
               tags$td("z", class = "align-middle fw-semibold"),
-              tags$td(numericInput(ns("lower_z"), NULL, value = -1)),
-              tags$td(numericInput(ns("upper_z"), NULL, value = 6.5)))
+              tags$td(numericInput(ns("lower_z"), NULL, value = -1, updateOn = "blur")),
+              tags$td(numericInput(ns("upper_z"), NULL, value = 6.5, updateOn = "blur")))
           )
         ),
         h6("Evaluation Points"),
