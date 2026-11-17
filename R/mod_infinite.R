@@ -44,7 +44,7 @@ mod_infinite_ui_fit_table <- function(id) {
 mod_infinite_server <- function(id,dgm){
   moduleServer(id, function(input, output, session){
   ns <- session$ns
-  inputs_ok<-reactive({dgm$inputs_ok()})
+  #inputs_ok<-reactive({dgm$inputs_ok()})
   # mod_sticky_params_server(
   #   "sticky_params",
   #   params = dgm$params
